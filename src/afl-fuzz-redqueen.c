@@ -2765,20 +2765,30 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 void output_cmp_differences(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   
   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
-  if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { // now run program with colorized buf
-
-    afl->queue_cur->colorized = CMPLOG_LVL_MAX;
-
+  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { // now run program with colorized buf
     return;
-
   }
 
   for (u32 k = 0; k < CMP_MAP_W; ++k) {
     if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
-      fprintf(stderr, "Not same hits; key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
+      fprintf(stderr, "INCONSISTENTLY (hits) Key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
         afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
     } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
-      fprintf(stderr, "Not the same type!; key: %u\n", k);
+      fprintf(stderr, "INCONSISTENTLY (type) Key: %u\n", k);
+    }
+  }
+
+  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { // now run program with colorized buf
+    return;
+  }
+
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
+      fprintf(stderr, "BY INPUT (hits) key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
+        afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
+    } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
+      fprintf(stderr, "BY INPUT (type); key: %u\n", k);
     }
   }
 
@@ -2804,11 +2814,17 @@ void output_cmp_differences(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   for (u32 k = 0; k < CMP_MAP_W; ++k) {
     bool different = false;
     if (afl->shm.cmp_map->headers[k].hits == 0){continue;}
-    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){continue;}
-    if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type){continue;}
+    // if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){continue;};
+
+    unsigned loggeds;
+    if (afl->shm.cmp_map->headers[k].type == CMP_TYPE_INS){
+      loggeds = MIN((u32) afl->shm.cmp_map->headers[k].hits, (u32) CMP_MAP_H);
+    } else {
+      loggeds = MIN((u32) afl->shm.cmp_map->headers[k].hits, (u32) CMP_MAP_RTN_H);
+    }
 
 
-    for (int i = 0; i < afl->shm.cmp_map->headers[k].hits; ++i) {
+    for (unsigned i = 0; i < loggeds; ++i) {
       struct cmp_operands *o = &afl->orig_cmp_map->log[k][i];
 
       struct cmp_operands *o_new = &afl->shm.cmp_map->log[k][i];
