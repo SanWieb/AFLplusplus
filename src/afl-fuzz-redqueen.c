@@ -2762,6 +2762,107 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
 }
 
+void output_cmp_differences(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
+  
+  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+  if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { // now run program with colorized buf
+
+    afl->queue_cur->colorized = CMPLOG_LVL_MAX;
+
+    return;
+
+  }
+
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
+      fprintf(stderr, "Not same hits; key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
+        afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
+    } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
+      fprintf(stderr, "Not the same type!; key: %u\n", k);
+    }
+  }
+
+  u32 compares = 0;
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    if (afl->orig_cmp_map->headers[k].hits){
+      compares++;
+    }
+  }
+  fprintf(stderr, "Compares on ORG: %u\n", compares);
+  compares = 0;
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    if (afl->shm.cmp_map->headers[k].hits){
+      compares++;
+    }
+  }
+  fprintf(stderr, "Compares on NEW: %u\n", compares);
+
+  fprintf(stderr, ">>> Check done\n");
+
+  u32 different_values_rtn = 0;
+  u32 different_values_cmp = 0;
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    bool different = false;
+    if (afl->shm.cmp_map->headers[k].hits == 0){continue;}
+    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){continue;}
+    if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type){continue;}
+
+
+    for (int i = 0; i < afl->shm.cmp_map->headers[k].hits; ++i) {
+      struct cmp_operands *o = &afl->orig_cmp_map->log[k][i];
+
+      struct cmp_operands *o_new = &afl->shm.cmp_map->log[k][i];
+
+      if (afl->shm.cmp_map->headers[k].type == CMP_TYPE_INS){
+
+        if (o_new->v0 != o->v0 || o_new->v1 != o->v1){
+          fprintf(stderr, "1: Key %u logged %u differ: %02llx - %02llx | %02llx - %02llx \n", 
+            k, i, o_new->v0 , o->v0, o_new->v1, o->v1);
+          different = true;
+        }
+        
+
+      } else {
+
+        if (memcmp(o_new, o, sizeof(struct cmpfn_operands))) {
+
+          fprintf(stderr, "2: Key %u logged %u differ o0=", k, i);
+          unsigned w;
+          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
+            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o)->v0[w]);
+          fprintf(stderr, " v0=");
+          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
+            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o_new)->v0[w]);
+          fprintf(stderr, " o1=");
+          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
+            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o)->v1[w]);
+          fprintf(stderr, " v1=");
+          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
+            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o_new)->v1[w]);
+          fprintf(stderr, "\n");
+          different = true;
+
+        }
+
+      }
+    }
+
+    if (different){
+      // different_values_cmp++;
+      if (afl->shm.cmp_map->headers[k].type == CMP_TYPE_INS) {
+        different_values_cmp++;
+      }  else {
+        different_values_rtn++;
+      }
+      
+    }    
+
+  }
+
+  fprintf(stderr, "Comparisons with different values: %u (cmp) %u (rtn) out of %u\n", different_values_cmp, different_values_rtn, compares);
+
+}
+
 ///// Input to State stage
 
 // afl->queue_cur->exec_cksum
@@ -2866,6 +2967,11 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   }
   // Save cmp map of not colorized as orig_cmp_map
   memcpy(afl->orig_cmp_map, afl->shm.cmp_map, sizeof(struct cmp_map));
+
+  output_cmp_differences(afl, orig_buf, buf, len);
+
+
+
   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
   if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { // now run program with colorized buf
 
