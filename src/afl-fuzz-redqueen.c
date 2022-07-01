@@ -30,9 +30,9 @@
 
 // #define _DEBUG
 #define TAINT_MAP_LOG
-#define TAINT_MAP_LOG_VERBOSE
+// #define TAINT_MAP_LOG_VERBOSE
 #define _STATS
-#define LOCATIONS_LOG
+// #define LOCATIONS_LOG
 #define CMPLOG_INTROSPECTION
 
 // CMP attribute enum
@@ -2890,13 +2890,10 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
   u8 changed = 0;
   hshape = SHAPE_BYTES(h->shape);
 
-  if (h->hits > CMP_MAP_RTN_H) {
+  loggeds = MIN(h->hits, afl->shm.cmp_map->headers[key].hits);
+  if (loggeds > CMP_MAP_H) {
 
-    loggeds = CMP_MAP_RTN_H;
-
-  } else {
-
-    loggeds = h->hits;
+    loggeds = CMP_MAP_H;
 
   }
 
@@ -3007,13 +3004,10 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
   u8 changed = 0;
 
   hshape = SHAPE_BYTES(h->shape);
-  if (h->hits > CMP_MAP_H) {
+  loggeds = MIN(h->hits, afl->shm.cmp_map->headers[key].hits);
+  if (loggeds > CMP_MAP_H) {
 
     loggeds = CMP_MAP_H;
-
-  } else {
-
-    loggeds = h->hits;
 
   }
 
@@ -3096,7 +3090,7 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
           fprintf(stderr, "Hits %u bigger then new %u\n", afl->orig_cmp_map->headers[k].hits, afl->shm.cmp_map->headers[k].hits);
         hits_different++;}
 
-    if(!set_unchanging && taint && taint_cmp_list[k] == NULL){
+    if(!set_unchanging && taint && taint_cmp_list[k] == NULL){\
 
       taint_cmp_list[k] = ck_alloc(sizeof(struct taint_cmp));
       taint_cmp_list[k]->key = k;
@@ -3132,9 +3126,8 @@ void compare_types(afl_state_t *afl){
 }
 
 u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len, 
-                    struct tainted *taint, struct taint_mapping *taint_cmps){
+                    struct tainted *taint, struct taint_cmp * taint_cmp_list[CMP_MAP_W]){
   u32 changed = 0;
-  struct taint_cmp * taint_cmp_list[CMP_MAP_W] = {0};
   u8 * partly_buf = ck_alloc_nozero(len);
 
   u32 taint_positions = 0;
@@ -3305,8 +3298,8 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
 
   // output_cmp_differences(afl, orig_buf, buf, len);
   
-  struct taint_mapping taint_cmps = { 0,  NULL}; 
-  fill_taint_map(afl, orig_buf, buf, len, taint, &taint_cmps);
+  struct taint_cmp * taint_cmp_list[CMP_MAP_W] = {0};
+  fill_taint_map(afl, orig_buf, buf, len, taint, taint_cmp_list);
 
 
 
