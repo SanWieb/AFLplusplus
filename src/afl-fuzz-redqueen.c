@@ -30,6 +30,7 @@
 
 // #define _DEBUG
 #define TAINT_MAP_LOG
+#define TAINT_MAP_LOG_VERBOSE
 #define _STATS
 #define LOCATIONS_LOG
 #define CMPLOG_INTROSPECTION
@@ -2923,6 +2924,7 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
 
     if (memcmp(orig_o->v0, o->v0, l0max)){
 
+      changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
@@ -2941,10 +2943,22 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
+
+    #ifdef TAINT_MAP_LOG_VERBOSE
+      unsigned w;
+      fprintf(stderr, "RTN V0: Taint-pos %u Logged: %u(/%u) ", taint->pos, i, loggeds - 1);
+      for (w = 0; w < l0max; ++w)
+            fprintf(stderr, "%02x", orig_o->v0[w]);
+      fprintf(stderr, " vs ");
+      for (w = 0; w < l0max; ++w)
+            fprintf(stderr, "%02x", o->v0[w]);
+      fprintf(stderr, "\n");
+    #endif
       
     }
     if (memcmp(orig_o->v1, o->v1, l1max)){
-      
+
+      changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
@@ -2962,6 +2976,17 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
+
+    #ifdef TAINT_MAP_LOG_VERBOSE
+      unsigned w;
+      fprintf(stderr, "RTN V1: Taint-pos %u Logged: %u(/%u)", taint->pos, i, loggeds - 1);
+      for (w = 0; w < l1max; ++w)
+            fprintf(stderr, "%02x", orig_o->v1[w]);
+      fprintf(stderr, " vs ");
+      for (w = 0; w < l1max; ++w)
+            fprintf(stderr, "%02x", o->v1[w]);
+      fprintf(stderr, "\n");
+    #endif
 
     } 
   
@@ -3018,6 +3043,10 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
         ref->next = next_ref;
       }
 
+    #ifdef TAINT_MAP_LOG_VERBOSE
+      fprintf(stderr, "CMP V0: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v0, o->v0);
+    #endif
+
     }
     if (orig_o->v1 != o->v1){
       
@@ -3040,6 +3069,10 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
         ref->next = next_ref;
       }
 
+    #ifdef TAINT_MAP_LOG_VERBOSE
+      fprintf(stderr, "CMP V1: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v1, o->v1);
+    #endif
+
     }
       
   }
@@ -3054,29 +3087,48 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
                     struct tainted *taint) {
   
   u32 changed = 0;
+  u32 hits_different = 0;
   for (u32 k = 0; k < CMP_MAP_W; ++k) {
     if (afl->orig_cmp_map->headers[k].unchanging){continue;}
     if (afl->orig_cmp_map->headers[k].hits == 0){continue;}
+    if (afl->orig_cmp_map->headers[k].hits !=  afl->shm.cmp_map->headers[k].hits){
+        if (afl->orig_cmp_map->headers[k].hits >  afl->shm.cmp_map->headers[k].hits)
+          fprintf(stderr, "Hits %u bigger then new %u\n", afl->orig_cmp_map->headers[k].hits, afl->shm.cmp_map->headers[k].hits);
+        hits_different++;}
 
-    if(!set_unchanging && !taint && taint_cmp_list[k] == NULL){
+    if(!set_unchanging && taint && taint_cmp_list[k] == NULL){
+
       taint_cmp_list[k] = ck_alloc(sizeof(struct taint_cmp));
       taint_cmp_list[k]->key = k;
-      // fprintf(stderr, "Compare KEY %u\n", taint_cmp_list[k]->key);
     }
     if (afl->orig_cmp_map->headers[k].type == CMP_TYPE_INS) {
-      // fprintf(stderr, "Compare INS %p\n", taint_cmp_list[k]);
+
       changed += compare_cmp_ins(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     } else {
-      // fprintf(stderr, "Compare RTN\n");
+
       changed += compare_cmp_rtn(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     }
 
   }
 
+  fprintf(stderr, "Hits different %u \n", hits_different);
+
   return changed;
 
+}
+
+void compare_types(afl_state_t *afl){
+
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
+      fprintf(stderr, "INCONSISTENTLY (hits) Key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
+        afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
+    } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
+      fprintf(stderr, "INCONSISTENTLY (type) Key: %u\n", k);
+    }
+  }
 }
 
 u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len, 
@@ -3100,6 +3152,7 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
 
   changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
   fprintf(stderr, "Changed with same input %u\n", changed);
+  compare_types(afl);
 
 #endif
 #ifdef TAINT_MAP_LOG
@@ -3109,8 +3162,6 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
   changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
   fprintf(stderr, "Different input once: %u\n", changed);
 
-#endif
-#ifdef TAINT_MAP_LOG
   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
   if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { return 1; }
 
@@ -3125,9 +3176,7 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
 
   changed = compare_cmp_maps(afl, 1, taint_cmp_list, NULL);
 
-#ifdef TAINT_MAP_LOG
   fprintf(stderr, "Changed with different input %u\n", changed);
-#endif
 
   while(taint){
     memcpy(partly_buf + taint->pos, buf + taint->pos, taint->len);
@@ -3143,7 +3192,7 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
     memcpy(partly_buf + taint->pos, orig_buf + taint->pos, taint->len);
     taint = taint->prev;
 
-  }
+  }  
 
   return 0;
 
@@ -3315,7 +3364,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   for (k = 0; k < CMP_MAP_W; ++k) {
 
     if (!afl->shm.cmp_map->headers[k].hits) { continue; }
-    // if (afl->orig_cmp_map->headers[k].unchanging){continue;}
+    if (afl->orig_cmp_map->headers[k].unchanging){continue;}
 
     if (afl->pass_stats[k].faileds >= CMPLOG_FAIL_MAX ||
         afl->pass_stats[k].total >= CMPLOG_FAIL_MAX) {
@@ -3362,7 +3411,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   #endif
 
     if (!afl->shm.cmp_map->headers[k].hits) { continue; }
-    // if (afl->orig_cmp_map->headers[k].unchanging){continue;}
+    if (afl->orig_cmp_map->headers[k].unchanging){continue;}
 
 #if defined(_DEBUG) || defined(CMPLOG_INTROSPECTION)
     ++cmp_locations;
