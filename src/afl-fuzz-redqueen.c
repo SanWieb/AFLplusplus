@@ -29,6 +29,7 @@
 #include "cmplog.h"
 
 // #define _DEBUG
+#define TAINT_MAP_LOG
 #define _STATS
 #define LOCATIONS_LOG
 #define CMPLOG_INTROSPECTION
@@ -2922,19 +2923,21 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
 
     if (memcmp(orig_o->v0, o->v0, l0max)){
 
-      if (set_unchanging) break;
+      if (set_unchanging || !taint) break;
+
       if (t_cmp->taint_loggeds == NULL ){
-        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct tainted) * loggeds);
+
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
       }
 
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
 
-      if (!t_cmp->taint_loggeds->v0_taint_ref){
-        t_cmp->taint_loggeds->v0_taint_ref = next_ref;
+      if (!t_cmp->taint_loggeds[i].v0_taint_ref){
+        t_cmp->taint_loggeds[i].v0_taint_ref = next_ref;
       } else {
-        struct tainted_ref *ref =  t_cmp->taint_loggeds->v0_taint_ref;
+        struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
@@ -2942,20 +2945,20 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
     }
     if (memcmp(orig_o->v1, o->v1, l1max)){
       
-      if (set_unchanging) break;
+      if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct tainted) * loggeds);
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
       }
 
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
 
-      if (!t_cmp->taint_loggeds->v0_taint_ref){
-        t_cmp->taint_loggeds->v0_taint_ref = next_ref;
+      if (!t_cmp->taint_loggeds[i].v1_taint_ref){
+        t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
       } else {
-        struct tainted_ref *ref =  t_cmp->taint_loggeds->v0_taint_ref;
+        struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
@@ -2970,7 +2973,8 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
 
 }
 
-u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cmp * t_cmp) {
+u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cmp * t_cmp,
+                  struct tainted *taint) {
 
   struct cmp_header *h = &afl->orig_cmp_map->headers[key];
   u32                loggeds;
@@ -2996,13 +3000,46 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
     if (orig_o->v0 != o->v0){
 
       changed = 1;
-      if (set_unchanging) break;
+      if (set_unchanging || !taint) break;
+
+      if (t_cmp->taint_loggeds == NULL ){
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+      }
+
+      struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
+      next_ref->ref = taint;
+      next_ref->next = NULL;
+
+      if (!t_cmp->taint_loggeds[i].v0_taint_ref){
+        t_cmp->taint_loggeds[i].v0_taint_ref = next_ref;
+      } else {
+        struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
+        while(ref->next) ref = ref->next;
+        ref->next = next_ref;
+      }
 
     }
     if (orig_o->v1 != o->v1){
       
       changed = 1;
-      if (set_unchanging) break;
+      if (set_unchanging || !taint) break;
+
+      if (t_cmp->taint_loggeds == NULL ){
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+      }
+
+      struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
+      next_ref->ref = taint;
+      next_ref->next = NULL;
+
+      if (!t_cmp->taint_loggeds[i].v1_taint_ref){
+        t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
+      } else {
+        struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
+        while(ref->next) ref = ref->next;
+        ref->next = next_ref;
+      }
+
     }
       
   }
@@ -3013,7 +3050,7 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
 
 }
 
-u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * taint_cmp_list[],
+u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * taint_cmp_list[CMP_MAP_W],
                     struct tainted *taint) {
   
   u32 changed = 0;
@@ -3021,16 +3058,17 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
     if (afl->orig_cmp_map->headers[k].unchanging){continue;}
     if (afl->orig_cmp_map->headers[k].hits == 0){continue;}
 
-    if(!set_unchanging && taint_cmp_list[k] == NULL){
+    if(!set_unchanging && !taint && taint_cmp_list[k] == NULL){
       taint_cmp_list[k] = ck_alloc(sizeof(struct taint_cmp));
+      taint_cmp_list[k]->key = k;
+      // fprintf(stderr, "Compare KEY %u\n", taint_cmp_list[k]->key);
     }
-
     if (afl->orig_cmp_map->headers[k].type == CMP_TYPE_INS) {
-
+      // fprintf(stderr, "Compare INS %p\n", taint_cmp_list[k]);
       changed += compare_cmp_ins(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     } else {
-
+      // fprintf(stderr, "Compare RTN\n");
       changed += compare_cmp_rtn(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     }
@@ -3043,27 +3081,66 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
 
 u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len, 
                     struct tainted *taint, struct taint_mapping *taint_cmps){
+  u32 changed = 0;
+  struct taint_cmp * taint_cmp_list[CMP_MAP_W] = {0};
   u8 * partly_buf = ck_alloc_nozero(len);
-  u32 changed  = 0;
 
-  memcpy(partly_buf, buf, len);
+  u32 taint_positions = 0;
+  while (taint->next) {
+    taint = taint->next;
+    taint_positions++;
+  }
+  fprintf(stderr, "Tainted positions: %u\n", taint_positions);
 
+  memcpy(partly_buf, orig_buf, len);
+
+#ifdef TAINT_MAP_LOG
+  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { return 1; }
+
+  changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
+  fprintf(stderr, "Changed with same input %u\n", changed);
+
+#endif
+#ifdef TAINT_MAP_LOG
+  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+  if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { return 1; }
+
+  changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
+  fprintf(stderr, "Different input once: %u\n", changed);
+
+#endif
+#ifdef TAINT_MAP_LOG
+  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+  if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { return 1; }
+
+  changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
+  fprintf(stderr, "Different input twice: %u\n", changed);
+
+#endif
+  
   // we first check which comparisons never change
   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
   if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { return 1; }
 
-  changed = compare_cmp_maps(afl, 1, NULL, NULL);
+  changed = compare_cmp_maps(afl, 1, taint_cmp_list, NULL);
 
+#ifdef TAINT_MAP_LOG
   fprintf(stderr, "Changed with different input %u\n", changed);
-
-  struct taint_cmp taint_cmp_list[CMP_MAP_W] = {NULL};
+#endif
 
   while(taint){
-
     memcpy(partly_buf + taint->pos, buf + taint->pos, taint->len);
     if (unlikely(common_fuzz_cmplog_stuff(afl, partly_buf, len))) {return 1;}
 
-    compare_cmp_maps(afl, 0, &taint_cmp_list, taint); 
+    changed = compare_cmp_maps(afl, 0, taint_cmp_list, taint); 
+
+#ifdef TAINT_MAP_LOG
+    fprintf(stderr, "Tained Pos: %u Taint len: %u Changed Comparisons: %u\n",
+      taint->pos, taint->len, changed);
+#endif
+
+    memcpy(partly_buf + taint->pos, orig_buf + taint->pos, taint->len);
     taint = taint->prev;
 
   }
@@ -3238,6 +3315,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   for (k = 0; k < CMP_MAP_W; ++k) {
 
     if (!afl->shm.cmp_map->headers[k].hits) { continue; }
+    // if (afl->orig_cmp_map->headers[k].unchanging){continue;}
 
     if (afl->pass_stats[k].faileds >= CMPLOG_FAIL_MAX ||
         afl->pass_stats[k].total >= CMPLOG_FAIL_MAX) {
@@ -3284,6 +3362,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   #endif
 
     if (!afl->shm.cmp_map->headers[k].hits) { continue; }
+    // if (afl->orig_cmp_map->headers[k].unchanging){continue;}
 
 #if defined(_DEBUG) || defined(CMPLOG_INTROSPECTION)
     ++cmp_locations;
