@@ -1,3 +1,4 @@
+#define EXTRA_OPTIMISATIONS
 /*
    american fuzzy lop++ - redqueen implementation on top of cmplog
    ---------------------------------------------------------------
@@ -36,7 +37,7 @@
 // #define CMPLOG_INTROSPECTION
 
 // #define COARSE_TAINT_MAP
-// #define EXTRA_OPTIMISATIONS
+#define EXTRA_OPTIMISATIONS
 
 // CMP attribute enum
 enum {
@@ -3735,4 +3736,3 @@ exit_its:
   return r;
 
 }
-
