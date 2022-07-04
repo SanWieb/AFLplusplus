@@ -33,9 +33,10 @@
 // #define TAINT_MAP_LOG_VERBOSE
 // #define _STATS
 // #define LOCATIONS_LOG
-#define CMPLOG_INTROSPECTION
+// #define CMPLOG_INTROSPECTION
 
 // #define COARSE_TAINT_MAP
+#define EXTRA_OPTIMISATIONS
 
 // CMP attribute enum
 enum {
@@ -1120,7 +1121,9 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
       // the value 16 means this is a +- 1.0 test case
       if (its_len >= 8 && ((*buf_64 == pattern && *o_buf_64 == o_pattern) ||
                            attr >= IS_FP_MOD)) {
-
+        // if (*buf_64 == repl){
+        //   fprintf(stderr, "Skipped CMPLOG!\n");
+        // } else {
         u64 tmp_64 = *buf_64;
         *buf_64 = repl;
         if (unlikely(its_fuzz(afl, buf, len, status))) { return 1; }
@@ -1128,6 +1131,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
         if (*status == 1) { memcpy(cbuf + idx, buf_64, 8); }
 #endif
         *buf_64 = tmp_64;
+        // }
 
         // fprintf(stderr, "Status=%u\n", *status);
 
@@ -1162,6 +1166,10 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
           ((*buf_32 == (u32)pattern && *o_buf_32 == (u32)o_pattern) ||
            attr >= IS_FP_MOD)) {
 
+        // if (*buf_32 == (u32)repl){
+        //   fprintf(stderr, "Skipped CMPLOG!\n");
+        // } else {
+
         u32 tmp_32 = *buf_32;
         *buf_32 = (u32)repl;
         if (unlikely(its_fuzz(afl, buf, len, status))) { return 1; }
@@ -1169,6 +1177,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
         if (*status == 1) { memcpy(cbuf + idx, buf_32, 4); }
 #endif
         *buf_32 = tmp_32;
+        // }
 
         // fprintf(stderr, "Status=%u\n", *status);
 
@@ -1196,6 +1205,10 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
           ((*buf_16 == (u16)pattern && *o_buf_16 == (u16)o_pattern) ||
            attr >= IS_FP_MOD)) {
 
+        // if (*buf_16 == (u16)repl){
+        //   fprintf(stderr, "Skipped CMPLOG!\n");
+        // } else {
+
         u16 tmp_16 = *buf_16;
         *buf_16 = (u16)repl;
         if (unlikely(its_fuzz(afl, buf, len, status))) { return 1; }
@@ -1203,6 +1216,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
         if (*status == 1) { memcpy(cbuf + idx, buf_16, 2); }
 #endif
         *buf_16 = tmp_16;
+        // }
 
       }
 
@@ -1234,6 +1248,10 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
           ((*buf_8 == (u8)pattern && *o_buf_8 == (u8)o_pattern) ||
            attr >= IS_FP_MOD)) {
 
+        // if (*buf_8 == (u8)repl){
+        //   fprintf(stderr, "Skipped CMPLOG!\n");
+        // } else {
+
         u8 tmp_8 = *buf_8;
         *buf_8 = (u8)repl;
         if (unlikely(its_fuzz(afl, buf, len, status))) { return 1; }
@@ -1241,6 +1259,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
         if (*status == 1) { cbuf[idx] = *buf_8; }
 #endif
         *buf_8 = tmp_8;
+        // }
 
       }
 
@@ -1774,8 +1793,10 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
           }
         } else if (t_v0) {
           taint_len = t_v0->ref->pos + t_v0->ref->len - idx;
-        } else {
+        } else if (t_v1){
           taint_len = t_v1->ref->pos + t_v1->ref->len - idx;
+        } else {
+          break;
         }
 
       }
@@ -1792,7 +1813,7 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #ifdef COARSE_TAINT_MAP
       if (t_v0) {
 #else
-      if (t_v0 && idx > t_v0->ref->pos) {
+      if (t_v0 && idx >= t_v0->ref->pos) {
 #endif
           if (s128_v0 != orig_s128_v0 && orig_s128_v0 != orig_s128_v1) {
 
@@ -1819,7 +1840,7 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #ifdef COARSE_TAINT_MAP
         if (t_v1) {
 #else
-        if (t_v1 && idx > t_v1->ref->pos) {
+        if (t_v1 && idx >= t_v1->ref->pos) {
 #endif
           if (s128_v1 != orig_s128_v1 && orig_s128_v1 != orig_s128_v0) {
 
@@ -1922,7 +1943,7 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #ifdef COARSE_TAINT_MAP
       if (t_v0) {
 #else
-      if (t_v0 && idx > t_v0->ref->pos) {
+      if (t_v0 && idx >= t_v0->ref->pos) {
 #endif
         if ((o->v0 != orig_o->v0 || lvl >= LVL3) && orig_o->v0 != orig_o->v1) {
 
@@ -1946,7 +1967,7 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #ifdef COARSE_TAINT_MAP
       if (t_v1) {
 #else
-      if (t_v1 && idx > t_v1->ref->pos) {
+      if (t_v1 && idx >= t_v1->ref->pos) {
 #endif
 
         status = 0;
@@ -2038,6 +2059,7 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
   if (loggeds > 3 && ((s_v0_fixed && s_v1_inc) || (s_v1_fixed && s_v0_inc) ||
                       (s_v0_fixed && s_v1_dec) || (s_v1_fixed && s_v0_dec))) {
+    fprintf(stderr, "Loop detected! \n");
 
     afl->pass_stats[key].total = afl->pass_stats[key].faileds = 0xff;
 
@@ -2188,12 +2210,24 @@ static u8 rtn_extend_encoding(afl_state_t *afl, u8 entry,
 
       for (i = 0; i < its_len; ++i) {
         // only fuzz if o_pattern is in orig_buff at that place
+        // fprintf(stderr, "BUF:  %02x REPL: %02x Pattern: %02x Orig_Pattern %02x Orig_BUF: %02x \n", buf[idx + i], repl[i], pattern[i], o_pattern[i], orig_buf[idx + i]);
+    #ifdef EXTRA_OPTIMISATIONS
+        if (pattern[i] != buf[idx + i] || o_pattern[i] != orig_buf[idx + i] ||
+            *status == 1)
+    #else
         if ((pattern[i] != buf[idx + i] && o_pattern[i] != orig_buf[idx + i]) ||
-            *status == 1) {
+                *status == 1)
+    #endif
+        {
 
           break;
 
         }
+    
+    #ifdef EXTRA_OPTIMISATIONS
+        if (buf[idx + i] == repl[i]) { continue;}
+    #endif
+        // fprintf(stderr, "BUF:  %02x REPL: %02x Pattern: %02x Orig_Pattern %02x Orig_BUF: %02x \n", buf[idx + i], repl[i], pattern[i], o_pattern[i], orig_buf[idx + i]);
 
         buf[idx + i] = repl[i];
 
@@ -2686,13 +2720,15 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
           }
         } else if (t_v0) {
           taint_len = t_v0->ref->pos + t_v0->ref->len - idx;
-        } else {
+        } else if (t_v1){
           taint_len = t_v1->ref->pos + t_v1->ref->len - idx;
+        } else {
+          break;
         }        
 
       }
   #endif
-      // fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
+      // fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u", t_v0,t_v1, taint_len, idx);
       // if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->ref->pos, t_v0->ref->len);
       // if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->ref->pos, t_v1->ref->len);
       // fprintf(stderr, "\n");
@@ -2771,7 +2807,7 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #ifdef COARSE_TAINT_MAP
       if (t_v1) {
 #else
-      if (t_v1 && idx > t_v1->ref->pos) {
+      if (t_v1 && idx >= t_v1->ref->pos) {
 #endif
         if (unlikely(rtn_extend_encoding(afl, 1, o, orig_o, idx, taint_len,
                                         orig_buf, buf, cbuf, len, lvl,
@@ -2795,7 +2831,7 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
     // if (possible_loations_right > 100 || possible_loations_left > 100)
     //  fprintf(stderr, "Possible locations 0-side %llu Possible locations 1-side: %llu\n", possible_loations_right, possible_loations_left);
     unsigned int w;
-    fprintf(stderr, "RTN,0,%llu,%u,", possible_loations_right,hshape);
+    fprintf(stderr, "\nRTN,0,%llu,%u,", possible_loations_right,hshape);
     for (w = 0; w < hshape; ++w)
       fprintf(stderr, "%02x", orig_o->v0[w]);
     fprintf(stderr, ",");
