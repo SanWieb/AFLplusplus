@@ -36,8 +36,8 @@
 // #define LOCATIONS_LOG
 // #define CMPLOG_INTROSPECTION
 
-// #define COARSE_TAINT_MAP
-#define EXTRA_OPTIMISATIONS
+#define COARSE_TAINT_MAP
+// #define EXTRA_OPTIMISATIONS
 
 // CMP attribute enum
 enum {
