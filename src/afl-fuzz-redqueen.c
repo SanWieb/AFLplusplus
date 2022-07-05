@@ -3343,7 +3343,7 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
   }
 
 #endif
-
+  fprintf(stderr, "\nFill Taint map done\n");
   return 0;
 
 }
