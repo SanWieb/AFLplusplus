@@ -3019,13 +3019,13 @@ void output_cmp_differences(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
 
 }
 
-u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cmp * t_cmp,
+u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cmp * t_cmp,
                   struct tainted *taint) {
 
   struct cmp_header *h = &afl->orig_cmp_map->headers[key];
   u32                loggeds;
 
-  u8 changed = 0;
+  u32 changed = 0;
   hshape = SHAPE_BYTES(h->shape);
 
   loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[key].hits);
@@ -3036,7 +3036,7 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
   }
 
   for (unsigned i = 0; i < loggeds; ++i) {
-
+    fprintf(stderr, "L %u/%u ", i, loggeds);
     u8  l0, l1, ol0, ol1;
 
     struct cmpfn_operands *orig_o =
@@ -3133,13 +3133,13 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
 
 }
 
-u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cmp * t_cmp,
+u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cmp * t_cmp,
                   struct tainted *taint) {
 
   struct cmp_header *h = &afl->orig_cmp_map->headers[key];
   u32                loggeds;
 
-  u8 changed = 0;
+  u32 changed = 0;
 
   hshape = SHAPE_BYTES(h->shape);
   loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[key].hits);
@@ -3150,7 +3150,7 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
   }
 
   for (unsigned i = 0; i < loggeds; ++i) {
-
+    fprintf(stderr, "L %u/%u ", i, loggeds);
     struct cmp_operands *orig_o = &afl->orig_cmp_map->log[key][i];
     struct cmp_operands *o = &afl->shm.cmp_map->log[key][i];
 
@@ -3215,7 +3215,7 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
 
 }
 
-u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * taint_cmp_list[CMP_MAP_W],
+u32 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * taint_cmp_list[CMP_MAP_W],
                     struct tainted *taint) {
   
   u32 changed = 0;
@@ -3226,24 +3226,26 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
         afl->shm.cmp_map->headers[k].type) {continue;}
     if (afl->orig_cmp_map->headers[k].hits == 0 || 
         afl->shm.cmp_map->headers[k].hits == 0){continue;}
+    fprintf(stderr, "CMP_MAP %u ", k);
     // if (afl->orig_cmp_map->headers[k].hits !=  afl->shm.cmp_map->headers[k].hits){
     //     if (afl->orig_cmp_map->headers[k].hits >  afl->shm.cmp_map->headers[k].hits)
     //       fprintf(stderr, "Hits %u bigger then new %u\n", afl->orig_cmp_map->headers[k].hits, afl->shm.cmp_map->headers[k].hits);
     //     hits_different++;}
 
-    if(!set_unchanging && taint && taint_cmp_list[k] == NULL){\
+    if(!set_unchanging && taint && taint_cmp_list[k] == NULL){
 
       taint_cmp_list[k] = ck_alloc(sizeof(struct taint_cmp));
       taint_cmp_list[k]->key = k;
     }
     if (afl->orig_cmp_map->headers[k].type == CMP_TYPE_INS) {
-      
+      fprintf(stderr, "INS: ");
       changed += compare_cmp_ins(afl, k, set_unchanging, taint_cmp_list[k], taint);
+      fprintf(stderr, "INS done\n");
 
     } else {
-      
+      fprintf(stderr, "RTN: ");
       changed += compare_cmp_rtn(afl, k, set_unchanging, taint_cmp_list[k], taint);
-
+      fprintf(stderr, "RTN done\n");
     }
 
   }
