@@ -36,7 +36,7 @@
 // #define LOCATIONS_LOG
 // #define CMPLOG_INTROSPECTION
 
-#define COARSE_TAINT_MAP
+// #define COARSE_TAINT_MAP
 // #define EXTRA_OPTIMISATIONS
 
 // CMP attribute enum
@@ -2060,7 +2060,6 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
   if (loggeds > 3 && ((s_v0_fixed && s_v1_inc) || (s_v1_fixed && s_v0_inc) ||
                       (s_v0_fixed && s_v1_dec) || (s_v1_fixed && s_v0_dec))) {
-    fprintf(stderr, "Loop detected! \n");
 
     afl->pass_stats[key].total = afl->pass_stats[key].faileds = 0xff;
 
