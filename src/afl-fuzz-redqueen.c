@@ -31,7 +31,7 @@
 // #define _DEBUG
 // #define TAINT_MAP_LOG
 // #define TAINT_MAP_LOG_VERBOSE
-#define _STATS
+// #define _STATS
 // #define LOCATIONS_LOG
 // #define CMPLOG_INTROSPECTION
 
@@ -1722,7 +1722,7 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
     }
 
 #ifdef _STATS
-    fprintf(stderr, "Handling cmp_fuzz: o0=%llx v0=%llx o1=%llx v1=%llx attr=%u shape=%u\n",
+    fprintf(stderr, "Handling cmp_fuzz: o0=%llu v0=%llu o1=%llu v1=%llu attr=%u shape=%u\n",
             orig_o->v0, o->v0, orig_o->v1, o->v1, h->attribute, hshape);
 #endif
 
@@ -1757,9 +1757,6 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
     u64 possible_loations_right = 0;
     u64 possible_loations_left = 0;
 #endif
-
-    u64 v0_executions = 0;
-    u64 v1_executions = 0;
 
     for (idx = 0; idx < len; ++idx) {
 
@@ -1818,7 +1815,6 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #else
       if (t_v0 && idx >= t_v0->ref->pos) {
 #endif
-      
           if (s128_v0 != orig_s128_v0 && orig_s128_v0 != orig_s128_v1) {
 
             if (unlikely(cmp_extend_encodingN(
@@ -1888,10 +1884,10 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
       u16 *o_buf_16 = (u16 *)&orig_buf[idx];
       u8 * o_buf_8 = &orig_buf[idx];
 
-      u64 o_v0 = orig_o->v0;
-      u64 o_v1 = orig_o->v1;
-      u64 v0 = o->v0;
-      u64 v1 = o->v1;
+      u64 o_v0 = o->v0;
+      u64 o_v1 = o->v1;
+      u64 v0 = orig_o->v0;
+      u64 v1 = orig_o->v1;
 
       for (int k = 0; k < 2; k++){
 
@@ -1949,7 +1945,6 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 #else
       if (t_v0 && idx >= t_v0->ref->pos) {
 #endif
-        u64 orig_executions = afl->fsrv.total_execs;
         if ((o->v0 != orig_o->v0 || lvl >= LVL3) && orig_o->v0 != orig_o->v1) {
 
           if (unlikely(cmp_extend_encoding(
@@ -1968,15 +1963,13 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
           break;
 
         }
-        v0_executions += afl->fsrv.total_execs - orig_executions;
-
       }
 #ifdef COARSE_TAINT_MAP
       if (t_v1) {
 #else
       if (t_v1 && idx >= t_v1->ref->pos) {
 #endif
-        u64 orig_executions = afl->fsrv.total_execs;
+
         status = 0;
         if ((o->v1 != orig_o->v1 || lvl >= LVL3) && orig_o->v0 != orig_o->v1) { // other side
 
@@ -1997,7 +1990,6 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
           break;
 
         }
-        v1_executions += afl->fsrv.total_execs - orig_executions;
       }
       // else {
       //   fprintf(stderr, "CMP_FUZZ Both operand are the same, no need to fuzz! \n");
@@ -2011,7 +2003,6 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
     fprintf(stderr, "CMP,0,%llu,%u,%02llx,%02llx,%u\n", possible_loations_right, hshape, orig_o->v0, o->v0,h->attribute);
     fprintf(stderr, "CMP,1,%llu,%u,%02llx,%02llx,%u\n", possible_loations_left, hshape, orig_o->v1, o->v1,h->attribute);
 #endif
-    fprintf(stderr, "V0 Executed: %llu V1 Executed: %llu\n", v0_executions, v1_executions);
 
 
 #ifdef _DEBUG
@@ -3647,14 +3638,14 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
                || ((lvl & LVL3) && afl->cmplog_enable_transform)
                //#endif
     ) {
-    // #ifdef _STATS
-    //   fprintf(stderr, "RTN %u\n", k);
-    // #endif
-    //   if (unlikely(rtn_fuzz(afl, k, orig_buf, buf, cbuf, len, lvl, taint, taint_cmp_list[k]))) {
+    #ifdef _STATS
+      fprintf(stderr, "RTN %u\n", k);
+    #endif
+      if (unlikely(rtn_fuzz(afl, k, orig_buf, buf, cbuf, len, lvl, taint, taint_cmp_list[k]))) {
 
-    //     goto exit_its;
+        goto exit_its;
 
-    //   }
+      }
 
     }
   #ifdef _STATS
