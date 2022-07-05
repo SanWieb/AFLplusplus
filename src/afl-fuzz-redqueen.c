@@ -29,7 +29,7 @@
 #include "cmplog.h"
 
 // #define _DEBUG
-#define TAINT_MAP_LOG
+// #define TAINT_MAP_LOG
 // #define TAINT_MAP_LOG_VERBOSE
 // #define _STATS
 // #define LOCATIONS_LOG
@@ -3071,14 +3071,17 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-      fprintf(stderr, " Next ref allocated ");
+      fprintf(stderr, " Next ref allocated Ref: %p ", t_cmp->taint_loggeds[i].v0_taint_ref);
       if (!t_cmp->taint_loggeds[i].v0_taint_ref){
         fprintf(stderr, " Not v0_taint_ref ");
         t_cmp->taint_loggeds[i].v0_taint_ref = next_ref;
       } else {
         fprintf(stderr, " go to last v0_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
-        while(ref->next) ref = ref->next;
+        while(ref->next) {
+          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          ref = ref->next;
+        }
         ref->next = next_ref;
       }
       fprintf(stderr, " Done! \n ");
@@ -3109,14 +3112,17 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-      fprintf(stderr, " Next ref allocated ");
+      fprintf(stderr, " Next ref allocated Ref: %p ", t_cmp->taint_loggeds[i].v1_taint_ref);
       if (!t_cmp->taint_loggeds[i].v1_taint_ref){
         fprintf(stderr, " Not v1_taint_ref ");
         t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
       } else {
         fprintf(stderr, " go to last v1_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
-        while(ref->next) ref = ref->next;
+        while(ref->next) {
+          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          ref = ref->next;
+        }
         ref->next = next_ref;
       }
       fprintf(stderr, " Done! \n ");
@@ -3178,14 +3184,17 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-      fprintf(stderr, " Next ref allocated ");
+      fprintf(stderr, " Next ref allocated Ref: %p ", t_cmp->taint_loggeds[i].v0_taint_ref);
       if (!t_cmp->taint_loggeds[i].v0_taint_ref){
         fprintf(stderr, " Not v0_taint_ref ");
         t_cmp->taint_loggeds[i].v0_taint_ref = next_ref;
       } else {
         fprintf(stderr, " go to last v0_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
-        while(ref->next) ref = ref->next;
+        while(ref->next) {
+          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          ref = ref->next;
+        }
         ref->next = next_ref;
       }
       fprintf(stderr, " Done! \n ");
@@ -3208,14 +3217,17 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-      fprintf(stderr, " Next ref allocated ");
+      fprintf(stderr, " Next ref allocated Ref: %p ", t_cmp->taint_loggeds[i].v1_taint_ref);
       if (!t_cmp->taint_loggeds[i].v1_taint_ref){
         fprintf(stderr, " Not v1_taint_ref ");
         t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
       } else {
         fprintf(stderr, " go to last v1_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
-        while(ref->next) ref = ref->next;
+        while(ref->next) {
+          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          ref = ref->next;
+        }
         ref->next = next_ref;
       }
       fprintf(stderr, " Done! \n ");
@@ -3535,10 +3547,11 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
       t = taint->next;
       ck_free(taint);
       taint = t;
-      fprintf(stderr, "Free at 1\n");
-      free_taint_map(afl, taint_cmp_list);
 
     }
+
+    fprintf(stderr, "Free at 1\n");
+    free_taint_map(afl, taint_cmp_list);
 
     return 1;
 
