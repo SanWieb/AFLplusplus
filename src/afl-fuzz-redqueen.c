@@ -29,7 +29,7 @@
 #include "cmplog.h"
 
 // #define _DEBUG
-// #define TAINT_MAP_LOG
+#define TAINT_MAP_LOG
 // #define TAINT_MAP_LOG_VERBOSE
 // #define _STATS
 // #define LOCATIONS_LOG
@@ -3058,26 +3058,30 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
     u8  l1max = MAX(l1, ol1);
 
     if (memcmp(orig_o->v0, o->v0, l0max)){
-
+      fprintf(stderr, "\n V0 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-
+        fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        fprintf(stderr, "Done ");
       }
 
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-
+      fprintf(stderr, " Next ref allocated ");
       if (!t_cmp->taint_loggeds[i].v0_taint_ref){
+        fprintf(stderr, " Not v0_taint_ref ");
         t_cmp->taint_loggeds[i].v0_taint_ref = next_ref;
       } else {
+        fprintf(stderr, " go to last v0_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
+      fprintf(stderr, " Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       unsigned w;
@@ -3092,25 +3096,30 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       
     }
     if (memcmp(orig_o->v1, o->v1, l1max)){
-
+      fprintf(stderr, "\n V1 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
+        fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        fprintf(stderr, "Done ");
       }
 
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-
+      fprintf(stderr, " Next ref allocated ");
       if (!t_cmp->taint_loggeds[i].v1_taint_ref){
+        fprintf(stderr, " Not v1_taint_ref ");
         t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
       } else {
+        fprintf(stderr, " go to last v1_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
+      fprintf(stderr, " Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       unsigned w;
@@ -3128,7 +3137,7 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   }
 
   if (set_unchanging && !changed) h->unchanging = 1;
-
+  fprintf(stderr, " Return changed ");
   return changed;
 
 }
@@ -3155,51 +3164,61 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
     struct cmp_operands *o = &afl->shm.cmp_map->log[key][i];
 
     if (orig_o->v0 != o->v0){
-
+      fprintf(stderr, "\n V0 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
+        fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        fprintf(stderr, "Done ");
       }
+
 
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-
+      fprintf(stderr, " Next ref allocated ");
       if (!t_cmp->taint_loggeds[i].v0_taint_ref){
+        fprintf(stderr, " Not v0_taint_ref ");
         t_cmp->taint_loggeds[i].v0_taint_ref = next_ref;
       } else {
+        fprintf(stderr, " go to last v0_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
-
+      fprintf(stderr, " Done! \n ");
     #ifdef TAINT_MAP_LOG_VERBOSE
       fprintf(stderr, "CMP V0: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v0, o->v0);
     #endif
 
     }
     if (orig_o->v1 != o->v1){
-      
+      fprintf(stderr, "\n V1 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
+        fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        fprintf(stderr, "Done ");
       }
 
       struct tainted_ref *next_ref = ck_alloc_nozero(sizeof(struct tainted_ref));
       next_ref->ref = taint;
       next_ref->next = NULL;
-
+      fprintf(stderr, " Next ref allocated ");
       if (!t_cmp->taint_loggeds[i].v1_taint_ref){
+        fprintf(stderr, " Not v1_taint_ref ");
         t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
       } else {
+        fprintf(stderr, " go to last v1_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
         while(ref->next) ref = ref->next;
         ref->next = next_ref;
       }
+      fprintf(stderr, " Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       fprintf(stderr, "CMP V1: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v1, o->v1);
@@ -3210,7 +3229,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   }
 
   if (set_unchanging && !changed) h->unchanging = 1;
-
+  fprintf(stderr, " Return changed ");
   return changed;
 
 }
@@ -3505,7 +3524,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   struct taint_cmp * taint_cmp_list[CMP_MAP_W] = {0};
   fill_taint_map(afl, orig_buf, buf, len, taint, taint_cmp_list);
 
-
+  fprintf(stderr, "Continuing program.. \n");
 
   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
   if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { // now run program with colorized buf
@@ -3516,7 +3535,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
       t = taint->next;
       ck_free(taint);
       taint = t;
-
+      fprintf(stderr, "Free at 1\n");
       free_taint_map(afl, taint_cmp_list);
 
     }
@@ -3659,7 +3678,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   r = 0;
 
 exit_its:
-
+  fprintf(stderr, "Free at 2\n");
   free_taint_map(afl, taint_cmp_list);
 
   if (afl->cmplog_lvl == CMPLOG_LVL_MAX) {
