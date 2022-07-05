@@ -1802,10 +1802,10 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
       }
   #endif
-      fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
-      if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->ref->pos, t_v0->ref->len);
-      if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->ref->pos, t_v1->ref->len);
-      fprintf(stderr, "\n");
+      // fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
+      // if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->ref->pos, t_v0->ref->len);
+      // if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->ref->pos, t_v1->ref->len);
+      // fprintf(stderr, "\n");
       status = 0;
 
 #ifdef WORD_SIZE_64
@@ -2728,10 +2728,10 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
       }
   #endif
-      fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u", t_v0,t_v1, taint_len, idx);
-      if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->ref->pos, t_v0->ref->len);
-      if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->ref->pos, t_v1->ref->len);
-      fprintf(stderr, "\n");
+      // fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u", t_v0,t_v1, taint_len, idx);
+      // if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->ref->pos, t_v0->ref->len);
+      // if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->ref->pos, t_v1->ref->len);
+      // fprintf(stderr, "\n");
 
       status = 0;
 
