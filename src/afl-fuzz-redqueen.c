@@ -29,10 +29,10 @@
 #include "afl-fuzz.h"
 #include "cmplog.h"
 
-#define _DEBUG
-// #define TAINT_MAP_LOG
+// #define _DEBUG
+#define TAINT_MAP_LOG
 // #define TAINT_MAP_LOG_VERBOSE
-#define _STATS
+// #define _STATS
 // #define LOCATIONS_LOG
 // #define CMPLOG_INTROSPECTION
 
@@ -3238,11 +3238,11 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
       taint_cmp_list[k]->key = k;
     }
     if (afl->orig_cmp_map->headers[k].type == CMP_TYPE_INS) {
-
+      fprintf(stderr, "Compare INS\n");
       changed += compare_cmp_ins(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     } else {
-
+      fprintf(stderr, "Compare RTN\n");
       changed += compare_cmp_rtn(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     }
@@ -3283,16 +3283,16 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
 
   memcpy(partly_buf, orig_buf, len);
 
-#ifdef TAINT_MAP_LOG
-  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
-  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { return 1; }
-
-  changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
-  fprintf(stderr, "Changed with same input %u\n", changed);
-  compare_types(afl);
-
-#endif
 // #ifdef TAINT_MAP_LOG
+//   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+//   if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { return 1; }
+
+//   changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
+//   fprintf(stderr, "Changed with same input %u\n", changed);
+//   compare_types(afl);
+
+// #endif
+// // #ifdef TAINT_MAP_LOG
 //   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
 //   if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { return 1; }
 
@@ -3340,6 +3340,8 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
     taint = taint->prev;
 
   }
+
+  fprintf(stderr, "Taint map filling done\n");
 
 #endif
 
