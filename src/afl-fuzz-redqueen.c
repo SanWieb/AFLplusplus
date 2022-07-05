@@ -1658,10 +1658,13 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
   hshape = SHAPE_BYTES(h->shape);
 
-  loggeds = MIN((u32) h->hits, (u32) afl->orig_cmp_map->headers[key].hits);
-  if (loggeds > CMP_MAP_H) {
+  if (h->hits > CMP_MAP_H) {
 
     loggeds = CMP_MAP_H;
+
+  } else {
+
+    loggeds = h->hits;
 
   }
 
@@ -2599,10 +2602,13 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
   hshape = SHAPE_BYTES(h->shape);
 
-  loggeds = MIN((u32) h->hits, (u32) afl->orig_cmp_map->headers[key].hits);
-  if (loggeds > CMP_MAP_H) {
+  if (h->hits > CMP_MAP_H) {
 
     loggeds = CMP_MAP_H;
+
+  } else {
+
+    loggeds = h->hits;
 
   }
 
@@ -3029,10 +3035,13 @@ u8 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
   u8 changed = 0;
   hshape = SHAPE_BYTES(h->shape);
 
-  loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[key].hits);
-  if (loggeds > CMP_MAP_H) {
+  if (afl->shm.cmp_map->headers[key].hits > CMP_MAP_H) {
 
     loggeds = CMP_MAP_H;
+
+  } else {
+
+    loggeds = afl->shm.cmp_map->headers[key].hits;
 
   }
 
@@ -3143,10 +3152,14 @@ u8 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_cm
   u8 changed = 0;
 
   hshape = SHAPE_BYTES(h->shape);
-  loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[key].hits);
-  if (loggeds > CMP_MAP_H) {
+
+  if (afl->shm.cmp_map->headers[key].hits > CMP_MAP_H) {
 
     loggeds = CMP_MAP_H;
+
+  } else {
+
+    loggeds = afl->shm.cmp_map->headers[key].hits;
 
   }
 
@@ -3225,8 +3238,7 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
     if (afl->orig_cmp_map->headers[k].unchanging){continue;}
     if (afl->orig_cmp_map->headers[k].type !=
         afl->shm.cmp_map->headers[k].type) {continue;}
-    if (afl->orig_cmp_map->headers[k].hits == 0 || 
-        afl->shm.cmp_map->headers[k].hits == 0){continue;}
+    if (afl->shm.cmp_map->headers[k].hits == 0){continue;}
     // if (afl->orig_cmp_map->headers[k].hits !=  afl->shm.cmp_map->headers[k].hits){
     //     if (afl->orig_cmp_map->headers[k].hits >  afl->shm.cmp_map->headers[k].hits)
     //       fprintf(stderr, "Hits %u bigger then new %u\n", afl->orig_cmp_map->headers[k].hits, afl->shm.cmp_map->headers[k].hits);
