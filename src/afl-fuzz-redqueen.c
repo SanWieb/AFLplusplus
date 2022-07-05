@@ -3078,13 +3078,14 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       } else {
         fprintf(stderr, " go to last v0_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
+        fprintf(stderr, "Ref: %p Next: %p ", ref, ref->next);
         while(ref->next) {
-          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          fprintf(stderr, "Next: %p ", ref->next->next);
           ref = ref->next;
         }
         ref->next = next_ref;
       }
-      fprintf(stderr, " Done! \n ");
+      fprintf(stderr, "\n Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       unsigned w;
@@ -3119,13 +3120,14 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       } else {
         fprintf(stderr, " go to last v1_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
+        fprintf(stderr, "Ref: %p Next: %p ", ref, ref->next);
         while(ref->next) {
-          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          fprintf(stderr, "Next: %p ", ref->next->next);
           ref = ref->next;
         }
         ref->next = next_ref;
       }
-      fprintf(stderr, " Done! \n ");
+      fprintf(stderr, "\n Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       unsigned w;
@@ -3191,13 +3193,14 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       } else {
         fprintf(stderr, " go to last v0_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v0_taint_ref;
+        fprintf(stderr, "Ref: %p Next: %p ", ref, ref->next);
         while(ref->next) {
-          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
+          fprintf(stderr, "Next: %p ", ref->next->next);
           ref = ref->next;
         }
         ref->next = next_ref;
       }
-      fprintf(stderr, " Done! \n ");
+      fprintf(stderr, "\n Done! \n ");
     #ifdef TAINT_MAP_LOG_VERBOSE
       fprintf(stderr, "CMP V0: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v0, o->v0);
     #endif
@@ -3222,15 +3225,15 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
         fprintf(stderr, " Not v1_taint_ref ");
         t_cmp->taint_loggeds[i].v1_taint_ref = next_ref;
       } else {
-        fprintf(stderr, " go to last v1_taint_ref ");
         struct tainted_ref *ref =  t_cmp->taint_loggeds[i].v1_taint_ref;
+        fprintf(stderr, "Ref: %p>%p", ref, ref->next);
         while(ref->next) {
-          fprintf(stderr, "Ref:%p Ref->next: %p Next->Next: %p ;;", ref, ref->next, ref->next->next);
           ref = ref->next;
+          fprintf(stderr, ">%p", ref->next);
         }
         ref->next = next_ref;
       }
-      fprintf(stderr, " Done! \n ");
+      fprintf(stderr, "\n Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       fprintf(stderr, "CMP V1: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v1, o->v1);
