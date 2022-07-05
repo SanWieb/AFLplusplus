@@ -30,7 +30,7 @@
 #include "cmplog.h"
 
 // #define _DEBUG
-#define TAINT_MAP_LOG
+// #define TAINT_MAP_LOG
 // #define TAINT_MAP_LOG_VERBOSE
 // #define _STATS
 // #define LOCATIONS_LOG
@@ -3238,11 +3238,11 @@ u8 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tain
       taint_cmp_list[k]->key = k;
     }
     if (afl->orig_cmp_map->headers[k].type == CMP_TYPE_INS) {
-      fprintf(stderr, "Compare INS\n");
+      
       changed += compare_cmp_ins(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     } else {
-      fprintf(stderr, "Compare RTN\n");
+      
       changed += compare_cmp_rtn(afl, k, set_unchanging, taint_cmp_list[k], taint);
 
     }
@@ -3341,12 +3341,57 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
 
   }
 
-  fprintf(stderr, "Taint map filling done\n");
-
 #endif
 
   return 0;
 
+}
+
+u8 free_taint_map(afl_state_t *afl, struct taint_cmp * taint_cmp_list[CMP_MAP_W]) {
+  u32 loggeds;
+  struct tainted_ref *ref, *ref_next;
+
+  for (u32 k = 0; k < CMP_MAP_W; ++k) {
+    if (taint_cmp_list[k]){
+      struct taint_cmp * t_cmp = taint_cmp_list[k];
+
+      if (t_cmp->taint_loggeds) {
+
+        struct cmp_header *h = &afl->orig_cmp_map->headers[k];
+        loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[k].hits);
+        if (loggeds > CMP_MAP_H) {
+            loggeds = CMP_MAP_H;
+        }
+
+        for (unsigned i = 0; i < loggeds; ++i) {
+          
+
+          ref = t_cmp->taint_loggeds[i].v0_taint_ref;
+
+          while (ref) {
+            ref_next = ref->next;
+            ck_free(ref);
+            ref = ref_next;
+          }
+
+          ref = t_cmp->taint_loggeds[i].v1_taint_ref;
+
+          while (ref) {
+            ref_next = ref->next;
+            ck_free(ref);
+            ref = ref_next;
+          }
+
+        }
+
+        ck_free(t_cmp->taint_loggeds);   
+      }
+
+      ck_free(t_cmp);
+    }
+  }
+
+  return 0;
 }
 
 ///// Input to State stage
@@ -3470,6 +3515,8 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
       t = taint->next;
       ck_free(taint);
       taint = t;
+
+      free_taint_map(afl, taint_cmp_list);
 
     }
 
@@ -3611,6 +3658,8 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   r = 0;
 
 exit_its:
+
+  free_taint_map(afl, taint_cmp_list);
 
   if (afl->cmplog_lvl == CMPLOG_LVL_MAX) {
 
