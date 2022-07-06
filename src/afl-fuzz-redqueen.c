@@ -3298,11 +3298,11 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
   memcpy(partly_buf, orig_buf, len);
 
 // #ifdef TAINT_MAP_LOG
-//   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
-//   if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { return 1; }
+  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
+  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { return 1; }
 
-//   changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL);
-//   fprintf(stderr, "Changed with same input %u\n", changed);
+  changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL, ntaint);
+  fprintf(stderr, "Changed with same input %u\n", changed);
 //   compare_types(afl);
 
 // #endif
