@@ -1810,10 +1810,10 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
       }
   #endif
-      fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
-      if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->pos, t_v0->len);
-      if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->pos, t_v1->len);
-      fprintf(stderr, "\n");
+      // fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
+      // if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->pos, t_v0->len);
+      // if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->pos, t_v1->len);
+      // fprintf(stderr, "\n");
       status = 0;
 
 #ifdef WORD_SIZE_64
@@ -1895,10 +1895,10 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
       u16 *o_buf_16 = (u16 *)&orig_buf[idx];
       u8 * o_buf_8 = &orig_buf[idx];
 
-      u64 o_v0 = o->v0;
-      u64 o_v1 = o->v1;
-      u64 v0 = orig_o->v0;
-      u64 v1 = orig_o->v1;
+      u64 o_v0 = orig_o->v0;
+      u64 o_v1 = orig_o->v1;
+      u64 v0 = o->v0;
+      u64 v1 = o->v1;
 
       for (int k = 0; k < 2; k++){
 
@@ -2611,9 +2611,9 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
   hshape = SHAPE_BYTES(h->shape);
 
   loggeds = MIN((u32) h->hits, (u32) afl->orig_cmp_map->headers[key].hits);
-  if (loggeds > CMP_MAP_H) {
+  if (loggeds > CMP_MAP_RTN_H) {
 
-    loggeds = CMP_MAP_H;
+    loggeds = CMP_MAP_RTN_H;
 
   }
 
@@ -2747,10 +2747,10 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
       }
   #endif
-      fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
-      if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->pos, t_v0->len);
-      if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->pos, t_v1->len);
-      fprintf(stderr, "\n");
+      // fprintf(stderr, "v0: %p v1: %p taint_len: %u idx: %u ", t_v0,t_v1, taint_len, idx);
+      // if(t_v0) fprintf(stderr, "v0 Pos: %u v0 Len: %u", t_v0->pos, t_v0->len);
+      // if(t_v1) fprintf(stderr, " v1 Pos: %u v1 Len: %u", t_v1->pos, t_v1->len);
+      // fprintf(stderr, "\n");
       status = 0;
 
 #if defined(_STATS) || defined(LOCATIONS_LOG)
@@ -3049,15 +3049,15 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   u32 changed = 0;
   hshape = SHAPE_BYTES(h->shape);
 
-  loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[key].hits);
-  if (loggeds > CMP_MAP_H) {
+  loggeds = h->hits;
+  if (loggeds > CMP_MAP_RTN_H) {
 
-    loggeds = CMP_MAP_H;
+    loggeds = CMP_MAP_RTN_H;
 
   }
 
   for (unsigned i = 0; i < loggeds; ++i) {
-    fprintf(stderr, "L %u/%u ", i, loggeds);
+    // fprintf(stderr, "L %u/%u ", i, loggeds);
     u8  l0, l1, ol0, ol1;
 
     struct cmpfn_operands *orig_o =
@@ -3079,24 +3079,24 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
     u8  l1max = MAX(l1, ol1);
 
     if (memcmp(orig_o->v0, o->v0, l0max)){
-      fprintf(stderr, "\n V0 not equal ");
+      // fprintf(stderr, "\n V0 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        fprintf(stderr, "Allocating taint_loggeds ");
+        // fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
-        fprintf(stderr, "Done ");
+        // fprintf(stderr, "Done ");
       }
 
       if (!t_cmp->taint_loggeds[i].nv0){
         t_cmp->taint_loggeds[i].v0 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
-        fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v0);
+        // fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v0);
       }
-      fprintf(stderr, "Insert taint %u", t_cmp->taint_loggeds[i].nv0);
+      // fprintf(stderr, "Insert taint %u", t_cmp->taint_loggeds[i].nv0);
       t_cmp->taint_loggeds[i].v0[t_cmp->taint_loggeds[i].nv0] = taint;
       t_cmp->taint_loggeds[i].nv0 += 1;
-      fprintf(stderr, "\n Done! \n ");
+      // fprintf(stderr, "\n Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       unsigned w;
@@ -3111,21 +3111,21 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       
     }
     if (memcmp(orig_o->v1, o->v1, l1max)){
-      fprintf(stderr, "\n V1 not equal ");
+      // fprintf(stderr, "\n V1 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        fprintf(stderr, "Allocating taint_loggeds ");
+        // fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
-        fprintf(stderr, "Done ");
+        // fprintf(stderr, "Done ");
       }
 
       if (!t_cmp->taint_loggeds[i].nv1){
         t_cmp->taint_loggeds[i].v1 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
-        fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v1);
+        // fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v1);
       }
-      fprintf(stderr, "Insert taint %u", t_cmp->taint_loggeds[i].nv1);
+      // fprintf(stderr, "Insert taint %u", t_cmp->taint_loggeds[i].nv1);
       t_cmp->taint_loggeds[i].v1[t_cmp->taint_loggeds[i].nv1] = taint;
       t_cmp->taint_loggeds[i].nv1 += 1;
 
@@ -3145,7 +3145,7 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   }
 
   if (set_unchanging && !changed) h->unchanging = 1;
-  fprintf(stderr, " Return changed ");
+  // fprintf(stderr, " Return changed ");
   return changed;
 
 }
@@ -3159,7 +3159,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   u32 changed = 0;
 
   hshape = SHAPE_BYTES(h->shape);
-  loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[key].hits);
+  loggeds = h->hits;
   if (loggeds > CMP_MAP_H) {
 
     loggeds = CMP_MAP_H;
@@ -3167,53 +3167,53 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   }
 
   for (unsigned i = 0; i < loggeds; ++i) {
-    fprintf(stderr, "L %u/%u ", i, loggeds);
+    // fprintf(stderr, "L %u/%u ", i, loggeds);
     struct cmp_operands *orig_o = &afl->orig_cmp_map->log[key][i];
     struct cmp_operands *o = &afl->shm.cmp_map->log[key][i];
 
     if (orig_o->v0 != o->v0){
-      fprintf(stderr, "\n V0 not equal ");
+      // fprintf(stderr, "\n V0 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        fprintf(stderr, "Allocating taint_loggeds ");
+        // fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
-        fprintf(stderr, "Done ");
+        // fprintf(stderr, "Done ");
       }
 
       if (!t_cmp->taint_loggeds[i].nv0){
         t_cmp->taint_loggeds[i].v0 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
-        fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v0);
+        // fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v0);
       }
-      fprintf(stderr, "Insert taint %u", t_cmp->taint_loggeds[i].nv0);
+      // fprintf(stderr, "Insert taint %u", t_cmp->taint_loggeds[i].nv0);
       t_cmp->taint_loggeds[i].v0[t_cmp->taint_loggeds[i].nv0] = taint;
       t_cmp->taint_loggeds[i].nv0 += 1;
-      fprintf(stderr, "\n Done! \n ");
+      // fprintf(stderr, "\n Done! \n ");
     #ifdef TAINT_MAP_LOG_VERBOSE
       fprintf(stderr, "CMP V0: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v0, o->v0);
     #endif
 
     }
     if (orig_o->v1 != o->v1){
-      fprintf(stderr, "\n V1 not equal ");
+      // fprintf(stderr, "\n V1 not equal ");
       changed = 1;
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        fprintf(stderr, "Allocating taint_loggeds ");
+        // fprintf(stderr, "Allocating taint_loggeds ");
         t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
-        fprintf(stderr, "Done ");
+        // fprintf(stderr, "Done ");
       }
 
       if (!t_cmp->taint_loggeds[i].nv1){
         t_cmp->taint_loggeds[i].v1 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
-        fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v1);
+        // fprintf(stderr, "Allocated taint array %p", t_cmp->taint_loggeds[i].v1);
       }
-      fprintf(stderr, "Insert taint %u",t_cmp->taint_loggeds[i].nv1);
+      // fprintf(stderr, "Insert taint %u",t_cmp->taint_loggeds[i].nv1);
       t_cmp->taint_loggeds[i].v1[t_cmp->taint_loggeds[i].nv1] = taint;
       t_cmp->taint_loggeds[i].nv1 += 1;
-      fprintf(stderr, "\n Done! \n ");
+      // fprintf(stderr, "\n Done! \n ");
 
     #ifdef TAINT_MAP_LOG_VERBOSE
       fprintf(stderr, "CMP V1: Taint-pos %u Logged: %u(/%u) %02llx vs %02llx\n", taint->pos, i, loggeds - 1, orig_o->v1, o->v1);
@@ -3224,7 +3224,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
   }
 
   if (set_unchanging && !changed) h->unchanging = 1;
-  fprintf(stderr, " Return changed ");
+  // fprintf(stderr, " Return changed ");
   return changed;
 
 }
@@ -3240,7 +3240,6 @@ u32 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tai
         afl->shm.cmp_map->headers[k].type) {continue;}
     if (afl->orig_cmp_map->headers[k].hits == 0 || 
         afl->shm.cmp_map->headers[k].hits == 0){continue;}
-    fprintf(stderr, "CMP_MAP %u ", k);
     // if (afl->orig_cmp_map->headers[k].hits !=  afl->shm.cmp_map->headers[k].hits){
     //     if (afl->orig_cmp_map->headers[k].hits >  afl->shm.cmp_map->headers[k].hits)
     //       fprintf(stderr, "Hits %u bigger then new %u\n", afl->orig_cmp_map->headers[k].hits, afl->shm.cmp_map->headers[k].hits);
@@ -3252,14 +3251,14 @@ u32 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tai
       taint_cmp_list[k]->key = k;
     }
     if (afl->orig_cmp_map->headers[k].type == CMP_TYPE_INS) {
-      fprintf(stderr, "INS: ");
+      // fprintf(stderr, "INS: ");
       changed += compare_cmp_ins(afl, k, set_unchanging, taint_cmp_list[k], taint, ntaint);
-      fprintf(stderr, "INS done\n");
+      // fprintf(stderr, "INS done\n");
 
     } else {
-      fprintf(stderr, "RTN: ");
+      // fprintf(stderr, "RTN: ");
       changed += compare_cmp_rtn(afl, k, set_unchanging, taint_cmp_list[k], taint, ntaint);
-      fprintf(stderr, "RTN done\n");
+      // fprintf(stderr, "RTN done\n");
     }
 
   }
@@ -3373,8 +3372,10 @@ u8 free_taint_map(afl_state_t *afl, struct taint_cmp * taint_cmp_list[CMP_MAP_W]
 
         struct cmp_header *h = &afl->orig_cmp_map->headers[k];
         loggeds = MIN((u32) h->hits, (u32) afl->shm.cmp_map->headers[k].hits);
-        if (loggeds > CMP_MAP_H) {
+        if (h->type == CMP_TYPE_INS && loggeds > CMP_MAP_H){
             loggeds = CMP_MAP_H;
+        } else if (loggeds > CMP_MAP_RTN_H) {
+            loggeds = CMP_MAP_RTN_H;
         }
         // fprintf(stderr, "CMPMap: %u \n", k);
         for (unsigned i = 0; i < loggeds; ++i) {
@@ -3671,7 +3672,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
 
     }
   #ifdef _STATS
-    fprintf(stderr, ">> Executed: %llu State item: %u ms: %llu\n", afl->fsrv.total_execs - orig_executions, afl->stage_cur, get_cur_time() - start_time);
+    fprintf(stderr, ">> Executed: %llu Total: %llu State item: %u ms: %llu\n", afl->fsrv.total_execs - orig_executions, afl->fsrv.total_execs, afl->stage_cur, get_cur_time() - start_time);
   #endif
 
   }
