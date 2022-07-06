@@ -91,14 +91,11 @@ struct cmp_map {
 
 /* Compare to taint mapping */
 
-struct tainted_ref {
-  struct tainted * ref;
-  struct tainted_ref * next;
-};
-
 struct taint_logged {
-  struct tainted_ref * v0_taint_ref;
-  struct tainted_ref * v1_taint_ref;
+  u32 nv0;
+  u32 nv1;
+  struct tainted ** v0;
+  struct tainted ** v1;
 };
 
 struct taint_cmp {
