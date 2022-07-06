@@ -3648,11 +3648,11 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   #ifdef _STATS
       fprintf(stderr, "INS %u\n", k);
   #endif
-      // if (unlikely(cmp_fuzz(afl, k, orig_buf, buf, cbuf, len, lvl, taint, taint_cmp_list[k]))) {
+      if (unlikely(cmp_fuzz(afl, k, orig_buf, buf, cbuf, len, lvl, taint, taint_cmp_list[k]))) {
 
-      //   goto exit_its;
+        goto exit_its;
 
-      // }
+      }
 
     } else if ((lvl & LVL1)
 
@@ -3663,11 +3663,11 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
     #ifdef _STATS
       fprintf(stderr, "RTN %u\n", k);
     #endif
-      // if (unlikely(rtn_fuzz(afl, k, orig_buf, buf, cbuf, len, lvl, taint, taint_cmp_list[k]))) {
+      if (unlikely(rtn_fuzz(afl, k, orig_buf, buf, cbuf, len, lvl, taint, taint_cmp_list[k]))) {
 
-      //   goto exit_its;
+        goto exit_its;
 
-      // }
+      }
 
     }
   #ifdef _STATS
