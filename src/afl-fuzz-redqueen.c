@@ -3091,7 +3091,7 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       }
 
       if (!t_cmp->taint_loggeds[i].nv0){
-        t_cmp->taint_loggeds[i].v0 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
+        t_cmp->taint_loggeds[i].v0 = ck_alloc_nozero(sizeof(struct tainted *) * ntaint);
       }
       
       t_cmp->taint_loggeds[i].v0[t_cmp->taint_loggeds[i].nv0] = taint;
@@ -3119,7 +3119,7 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       }
 
       if (!t_cmp->taint_loggeds[i].nv1){
-        t_cmp->taint_loggeds[i].v1 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
+        t_cmp->taint_loggeds[i].v1 = ck_alloc_nozero(sizeof(struct tainted *) * ntaint);
       }
       t_cmp->taint_loggeds[i].v1[t_cmp->taint_loggeds[i].nv1] = taint;
       t_cmp->taint_loggeds[i].nv1 += 1;
@@ -3176,7 +3176,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       }
 
       if (!t_cmp->taint_loggeds[i].nv0){
-        t_cmp->taint_loggeds[i].v0 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
+        t_cmp->taint_loggeds[i].v0 = ck_alloc_nozero(sizeof(struct tainted *) * ntaint );
       }
       
       t_cmp->taint_loggeds[i].v0[t_cmp->taint_loggeds[i].nv0] = taint;
@@ -3197,7 +3197,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       }
 
       if (!t_cmp->taint_loggeds[i].nv1){
-        t_cmp->taint_loggeds[i].v1 = ck_alloc_nozero(sizeof(struct tainted *) * (ntaint + 1));
+        t_cmp->taint_loggeds[i].v1 = ck_alloc_nozero(sizeof(struct tainted *) * ntaint);
       }
       t_cmp->taint_loggeds[i].v1[t_cmp->taint_loggeds[i].nv1] = taint;
       t_cmp->taint_loggeds[i].nv1 += 1;
@@ -3268,7 +3268,7 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
   u8 * partly_buf = ck_alloc_nozero(len);
 
 // #ifndef COARSE_TAINT_MAP
-  u32 ntaint = 0;
+  u32 ntaint = 1;
   while (taint->next) {
     taint = taint->next;
     ntaint++;
