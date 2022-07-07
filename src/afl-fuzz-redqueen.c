@@ -1648,9 +1648,12 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
   hshape = SHAPE_BYTES(h->shape);
 
   loggeds = h->hits;
-  if (loggeds > CMP_MAP_H) {
-
-    loggeds = CMP_MAP_H;
+  if (afl->shm.cmp_map->headers[key].type == CMP_TYPE_INS) {
+    if (loggeds > CMP_MAP_H)
+      loggeds = CMP_MAP_H;
+  } else {
+    if (loggeds > CMP_MAP_RTN_H)
+      loggeds = CMP_MAP_RTN_H;
 
   }
 
