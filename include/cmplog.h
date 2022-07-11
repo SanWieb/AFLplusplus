@@ -108,6 +108,15 @@ struct taint_mapping{
   struct taint_cmp * taint_cmps;
 };
 
+/* Cache try out */
+
+struct byte_replacement{
+  bool repl_u8_00;
+  bool repl_u8_01;
+  bool repl_u16_00;
+  bool repl_u16_01;
+};
+
 /* Execs the child */
 
 struct afl_forkserver;
