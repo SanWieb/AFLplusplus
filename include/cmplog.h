@@ -111,10 +111,10 @@ struct taint_mapping{
 /* Cache try out */
 
 struct byte_replacement{
-  bool repl_u8_00;
-  bool repl_u8_01;
-  bool repl_u16_00;
-  bool repl_u16_01;
+  u8 repl_u8_00;
+  u8 repl_u8_01;
+  u8 repl_u16_00;
+  u8 repl_u16_01;
 };
 
 /* Execs the child */

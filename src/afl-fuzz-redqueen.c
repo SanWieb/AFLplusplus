@@ -1197,7 +1197,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
           ((*buf_16 == (u16)pattern && *o_buf_16 == (u16)o_pattern) ||
            attr >= IS_FP_MOD)) {
 #ifdef CACHE_TRY_OUT
-        bool fuzz = true;
+        u8 fuzz = true;
         if ((u16) repl == 0){
           if (replaced_byte->repl_u16_00){
             fuzz = false;
@@ -1262,7 +1262,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
            attr >= IS_FP_MOD)) {
 
 #ifdef CACHE_TRY_OUT
-        bool fuzz = true;
+        u8 fuzz = true;
         if ((u8) repl == 0){
           if (replaced_byte->repl_u8_00){
             fuzz = false;
