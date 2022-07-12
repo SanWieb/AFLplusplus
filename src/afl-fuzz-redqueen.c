@@ -2277,10 +2277,12 @@ static u8 rtn_extend_encoding(afl_state_t *afl, u8 entry,
         }
   
         if (buf[idx + i] == repl[i]) { continue;}
-        // fprintf(stderr, "BUF:  %02x REPL: %02x Pattern: %02x Orig_Pattern %02x Orig_BUF: %02x \n", buf[idx + i], repl[i], pattern[i], o_pattern[i], orig_buf[idx + i]);
+
+        buf[idx + i] = repl[i];
+
 #ifdef CACHE_TRY_OUT
         if (i == 0) {
-          if (repl[i] == 0) {
+          if (repl[0] == 0) {
             if (replaced_byte->repl_u8_00){
               // fprintf(stderr, "RTN: Ignored %02x Idx: %u i: %u\n", repl[i], idx, i);
               continue;
@@ -2289,7 +2291,7 @@ static u8 rtn_extend_encoding(afl_state_t *afl, u8 entry,
               // fprintf(stderr, "RTN: Fuzzed %02x Idx: %u i: %u\n", repl[i], idx, i);
             }
 
-          } else if (repl[i] == 1) {
+          } else if (repl[0] == 1) {
             if (replaced_byte->repl_u8_01){
               // fprintf(stderr, "RTN: Ignored %02x Idx: %u i: %u\n", repl[i], idx, i);
               continue;
@@ -2299,31 +2301,8 @@ static u8 rtn_extend_encoding(afl_state_t *afl, u8 entry,
             }
 
           }
-        } else if (i == 1){
-          if ((u16) repl[i - 1] == 0) {
-            if (replaced_byte->repl_u16_00){
-              // fprintf(stderr, "RTN: Ignored %02x Idx: %u i: %u\n", repl[i], idx, i);
-              continue;
-            } else {
-              replaced_byte->repl_u16_00 = true;
-              // fprintf(stderr, "RTN: Fuzzed %02x Idx: %u i: %u\n", repl[i], idx, i);
-            }
-
-          } else if ((u16) repl[i - 1] == 1) {
-            if (replaced_byte->repl_u16_00){
-              // fprintf(stderr, "RTN: Ignored %02x Idx: %u i: %u\n", repl[i], idx, i);
-              continue;
-            } else {
-              replaced_byte->repl_u16_00 = true;
-              // fprintf(stderr, "RTN: Fuzzed %02x Idx: %u i: %u\n", repl[i], idx, i);
-            }
-
-          }
-
         }
 #endif
-
-        buf[idx + i] = repl[i];
 
         if (unlikely(its_fuzz(afl, buf, len, status))) { return 1; }
 
