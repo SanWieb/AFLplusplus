@@ -37,7 +37,7 @@
 // #define CACHE_TRY_OUT
 
 // #define COARSE_TAINT_MAP
-#define EXTRA_OPTIMISATIONS
+// #define EXTRA_OPTIMISATIONS
 
 // CMP attribute enum
 enum {
