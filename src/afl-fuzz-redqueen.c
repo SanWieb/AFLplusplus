@@ -3156,7 +3156,7 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
 
       if (t_cmp->taint_loggeds == NULL ){
         
-        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * CMP_MAP_H);
       }
 
       if (!t_cmp->taint_loggeds[i].nv0){
@@ -3184,7 +3184,7 @@ u32 compare_cmp_rtn(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * CMP_MAP_H);
       }
 
       if (!t_cmp->taint_loggeds[i].nv1){
@@ -3241,7 +3241,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * CMP_MAP_H);
       }
 
       if (!t_cmp->taint_loggeds[i].nv0){
@@ -3262,7 +3262,7 @@ u32 compare_cmp_ins(afl_state_t *afl, u32 key, u8 set_unchanging, struct taint_c
       if (set_unchanging || !taint) break;
 
       if (t_cmp->taint_loggeds == NULL ){
-        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * loggeds);
+        t_cmp->taint_loggeds =  ck_alloc(sizeof(struct taint_logged) * CMP_MAP_H);
       }
 
       if (!t_cmp->taint_loggeds[i].nv1){
