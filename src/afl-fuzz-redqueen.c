@@ -34,7 +34,7 @@
 // #define _STATS
 // #define LOCATIONS_LOG
 // #define CMPLOG_INTROSPECTION
-#define CACHE_TRY_OUT
+// #define CACHE_TRY_OUT
 
 // #define COARSE_TAINT_MAP
 #define EXTRA_OPTIMISATIONS
