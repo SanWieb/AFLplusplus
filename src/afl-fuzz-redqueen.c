@@ -302,7 +302,7 @@ static u8 colorization(afl_state_t *afl, u8 *buf, u32 len,
   memcpy(backup, buf, len);
   memcpy(changed, buf, len);
   type_replace(afl, changed, len);
-  // Split up the ranges each iterarion
+
   while ((rng = pop_biggest_range(&ranges)) != NULL &&
          afl->stage_cur < afl->stage_max) {
 
@@ -363,7 +363,7 @@ static u8 colorization(afl_state_t *afl, u8 *buf, u32 len,
     if (++afl->stage_cur % screen_update == 0) { show_stats(afl); };
 
   }
-  // convert to taint
+
   rng = ranges;
   while (rng) {
 
@@ -373,7 +373,7 @@ static u8 colorization(afl_state_t *afl, u8 *buf, u32 len,
 
   u32 i = 1;
   u32 positions = 0;
-  while (i) { // Convert all ranges to taints, start with smallest
+  while (i) {
 
   restart:
     i = 0;
@@ -382,7 +382,7 @@ static u8 colorization(afl_state_t *afl, u8 *buf, u32 len,
     rng = ranges;
 
     while (rng) {
-      // Get smallest range?
+
       if (rng->ok == 1 && rng->start < pos) {
 
         if (taint && taint->pos + taint->len == rng->start) {
@@ -528,7 +528,7 @@ static u8 its_fuzz(afl_state_t *afl, u8 *buf, u32 len, u8 *status) {
   orig_hit_cnt = afl->queued_items + afl->saved_crashes;
 
 #ifdef _DEBUG
-  // dump("DATA", buf, len);
+  dump("DATA", buf, len);
 #endif
 
   if (unlikely(common_fuzz_stuff(afl, buf, len))) { return 1; }
@@ -1106,7 +1106,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
 
   // we only allow this for ascii2integer (above) so leave if this is the case
   if (unlikely(pattern == o_pattern)) { return 0; }
-  // REPLACE the patterns on the idx
+
   if ((lvl & LVL1) || attr >= IS_FP_MOD) {
 
     if (hshape >= 8 && *status != 1) {
@@ -1133,6 +1133,7 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
 #endif
         *buf_64 = tmp_64;
 
+// fprintf(stderr, "Status=%u\n", *status);
 
       }
 
@@ -1172,6 +1173,8 @@ static u8 cmp_extend_encoding(afl_state_t *afl, struct cmp_header *h,
         if (*status == 1) { memcpy(cbuf + idx, buf_32, 4); }
 #endif
         *buf_32 = tmp_32;
+
+        // fprintf(stderr, "Status=%u\n", *status);
 
       }
 
@@ -1921,77 +1924,13 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
 #ifdef _DEBUG
       if (o->v0 != orig_o->v0 || o->v1 != orig_o->v1)
-        fprintf(stderr, "(cmp_fuzz) key=%u idx=%u o0=%llu v0=%llu o1=%llu v1=%llu\n", key,
+        fprintf(stderr, "key=%u idx=%u o0=%llu v0=%llu o1=%llu v1=%llu\n", key,
                 idx, orig_o->v0, o->v0, orig_o->v1, o->v1);
-#endif
-
-#if defined(_STATS) || defined(LOCATIONS_LOG)
-      u32 its_len = MIN(len - idx, taint_len);
-      u64 *buf_64 = (u64 *)&buf[idx];
-      u32 *buf_32 = (u32 *)&buf[idx];
-      u16 *buf_16 = (u16 *)&buf[idx];
-      u8 * buf_8 = &buf[idx];
-      u64 *o_buf_64 = (u64 *)&orig_buf[idx];
-      u32 *o_buf_32 = (u32 *)&orig_buf[idx];
-      u16 *o_buf_16 = (u16 *)&orig_buf[idx];
-      u8 * o_buf_8 = &orig_buf[idx];
-
-      u64 o_v0 = orig_o->v0;
-      u64 o_v1 = orig_o->v1;
-      u64 v0 = o->v0;
-      u64 v1 = o->v1;
-
-      for (int k = 0; k < 2; k++){
-
-        // Side 0
-        if (hshape >= 8 && its_len >= 8 && (*buf_64 == v0 && *o_buf_64 == o_v0)) {
-            possible_loations_right++;
-        }
-        if (hshape >= 8 && its_len >= 8 && (*buf_64 == SWAP64(v0) && *o_buf_64 == SWAP64(o_v0))) {
-            possible_loations_right++;
-        }
-        if (hshape >= 4 && its_len >= 4 && (*buf_32 == (u32)v0 && *o_buf_32 == (u32)o_v0)) {
-            possible_loations_right++;
-        }
-        if (hshape >= 4 && its_len >= 4 && (*buf_32 == (u32)SWAP32(v0) && *o_buf_32 == (u32)SWAP32(o_v0))) {
-            possible_loations_right++;
-        }
-        if (hshape >= 2 && its_len >= 2 && (*buf_16 == (u16)v0 && *o_buf_16 == (u16)o_v0)) {
-            possible_loations_right++;
-        }
-        if (k == 0 && hshape >= 1 && its_len >= 1 && (*buf_8 == (u8)SWAP16(v0) && *o_buf_8 == (u8)SWAP16(o_v0))) {
-            possible_loations_right++;
-        }
-        // Side 1
-        if (hshape >= 8 && its_len >= 8 && (*buf_64 == v1 && *o_buf_64 == o_v1)) {
-            possible_loations_left++;
-        }
-        if (hshape >= 8 && its_len >= 8 && (*buf_64 == SWAP64(v1) && *o_buf_64 == SWAP64(o_v1))) {
-            possible_loations_left++;
-        }
-        if (hshape >= 4 && its_len >= 4 && (*buf_32 == (u32)v1 && *o_buf_32 == (u32)o_v1)) {
-            possible_loations_left++;
-        }
-        if (hshape >= 4 && its_len >= 4 && (*buf_32 == (u32)SWAP32(v1) && *o_buf_32 == (u32)SWAP32(o_v1))) {
-            possible_loations_left++;
-        }
-        if (hshape >= 2 && its_len >= 2 && (*buf_16 == (u16)v1 && *o_buf_16 == (u16)o_v1)) {
-            possible_loations_left++;
-        }
-        if (hshape >= 2 && its_len >= 2 && (*buf_16 == (u16)SWAP16(v1) && *o_buf_16 == (u16)SWAP16(o_v1))) {
-            possible_loations_left++;
-        }
-        if (k == 0 && hshape >= 1 && its_len >= 1 && (*buf_8 == (u8)v1 && *o_buf_8 == (u8)o_v1)) {
-            possible_loations_left++;
-        }
-      }
-
 #endif
 
       // even for u128 and _ExtInt we do cmp_extend_encoding() because
       // if we got here their own special trials failed and it might just be
       // a cast from e.g. u64 to u128 from the input data.
-      // Not if org is true, but new is false. Only if old and new is differenct
 #ifdef COARSE_TAINT_MAP
       if (t_v0)
 #else
@@ -2044,23 +1983,12 @@ static u8 cmp_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
         }
       }
-      // else {
-      //   fprintf(stderr, "CMP_FUZZ Both operand are the same, no need to fuzz! \n");
-      // }
 
     }
 
-#if defined(_STATS) || defined(LOCATIONS_LOG)
-    // if (possible_loations_right > 100 || possible_loations_left > 100)
-    //  fprintf(stderr, "Possible locations 0-side %llu Possible locations 1-side: %llu\n", possible_loations_right, possible_loations_left);
-    fprintf(stderr, "CMP,0,%llu,%u,%02llx,%02llx,%u\n", possible_loations_right, hshape, orig_o->v0, o->v0,h->attribute);
-    fprintf(stderr, "CMP,1,%llu,%u,%02llx,%02llx,%u\n", possible_loations_left, hshape, orig_o->v1, o->v1,h->attribute);
-#endif
-
-
 #ifdef _DEBUG
     fprintf(stderr,
-            "END cmp_fuzz: %llx->%llx vs %llx->%llx attr=%u i=%u found=%u "
+            "END: %llx->%llx vs %llx->%llx attr=%u i=%u found=%u "
             "isN=%u size=%u\n",
             orig_o->v0, o->v0, orig_o->v1, o->v1, h->attribute, i, found_one,
             is_n, hshape);
@@ -2239,19 +2167,6 @@ static u8 rtn_extend_encoding(afl_state_t *afl, u8 entry,
   //   if (memcmp(user_val, "TEST") == 0)
   //     if (memcmp(user_val, "TEST-VALUE") == 0) ...
   // We only do this in lvl 3, otherwise we only do direct matching
-
-  // u32 possible_loations = 0;
-  // for (i = 0; i < its_len; ++i) {
-  //   // only fuzz if o_pattern is in orig_buff at that place
-  //   if ((pattern[i] != buf[idx + i] && o_pattern[i] != orig_buf[idx + i]) ||
-  //       *status == 1) {
-  //     // fprintf(stderr, "Stopped at: %u  Character: %u\n", i, buf[idx + i]);
-  //     break;
-  //   }
-  //   possible_loations++;
-  // }
-  // if (possible_loations > 0)
-    // fprintf(stderr, "Possible locations %u its_len: %u taint_len: %u Entry: %u Idx %u\n", possible_loations, its_len, taint_len, entry, idx);
 
   for (pre = from; pre <= to; pre++) {
 
@@ -2734,23 +2649,6 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
     fprintf(stderr, "\n");
     */
 
-// #ifdef _STATS
-//     unsigned int w;
-//     fprintf(stderr, "(rtn_fuzz) key=%u len=%u o0=", key, hshape);
-//     for (w = 0; w < hshape; ++w)
-//       fprintf(stderr, "%02x", orig_o->v0[w]);
-//     fprintf(stderr, " v0=");
-//     for (w = 0; w < hshape; ++w)
-//       fprintf(stderr, "%02x", o->v0[w]);
-//     fprintf(stderr, " o1=");
-//     for (w = 0; w < hshape; ++w)
-//       fprintf(stderr, "%02x", orig_o->v1[w]);
-//     fprintf(stderr, " v1=");
-//     for (w = 0; w < hshape; ++w)
-//       fprintf(stderr, "%02x", o->v1[w]);
-//     fprintf(stderr, "\n");
-// #endif
-
 #ifdef COARSE_TAINT_MAP
     t = taint;
     while (t->next) {
@@ -2764,10 +2662,6 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
     t_v1 = (iv1 < t_cmp->taint_loggeds[i].nv1) ? t_cmp->taint_loggeds[i].v1[iv1] : NULL;
 
 
-#if defined(_STATS) || defined(LOCATIONS_LOG)
-    u64 possible_loations_right = 0;
-    u64 possible_loations_left = 0;
-#endif
 
     for (idx = 0; idx < len; ++idx) {
 
@@ -2824,37 +2718,9 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
       // fprintf(stderr, "\n");
       status = 0;
 
-#if defined(_STATS) || defined(LOCATIONS_LOG)
-      u32 its_len = MIN(hshape, len - idx);
-      its_len = MIN(its_len, taint_len);
-
-      // right hand side
-
-      for (unsigned int k = 0; k < its_len; ++k) {
-        // only fuzz if o_pattern is in orig_buff at that place
-        if (o->v0[k] != buf[idx + k] || orig_o->v0[k] != orig_buf[idx + k]) {
-          // fprintf(stderr, "Stopped at: %u  Character: %u\n", i, buf[idx + i]);
-          break;
-        }
-        possible_loations_right++;
-      }
-
-//       // left hand side
-
-      for (unsigned int  k = 0; k < its_len; ++k) {
-        // only fuzz if o_pattern is in orig_buff at that place
-        if (o->v1[k] != buf[idx + k] || orig_o->v1[k] != orig_buf[idx + k]) {
-          // fprintf(stderr, "Stopped at: %u  Character: %u\n", i, buf[idx + i]);
-          break;
-        }
-        possible_loations_left++;
-      }
-
-#endif
-
 #ifdef _DEBUG
       int w;
-      fprintf(stderr, "(rtn_fuzz) key=%u idx=%u len=%u o0=", key, idx, hshape);
+      fprintf(stderr, "key=%u idx=%u len=%u o0=", key, idx, hshape);
       for (w = 0; w < hshape; ++w)
         fprintf(stderr, "%02x", orig_o->v0[w]);
       fprintf(stderr, " v0=");
@@ -2918,27 +2784,6 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
 
     }
 
-#if defined(_STATS) || defined(LOCATIONS_LOG)
-    // if (possible_loations_right > 100 || possible_loations_left > 100)
-    //  fprintf(stderr, "Possible locations 0-side %llu Possible locations 1-side: %llu\n", possible_loations_right, possible_loations_left);
-    unsigned int w;
-    fprintf(stderr, "\nRTN,0,%llu,%u,", possible_loations_right,hshape);
-    for (w = 0; w < hshape; ++w)
-      fprintf(stderr, "%02x", orig_o->v0[w]);
-    fprintf(stderr, ",");
-    for (w = 0; w < hshape; ++w)
-      fprintf(stderr, "%02x", o->v0[w]);
-    fprintf(stderr, "\n");
-
-    fprintf(stderr, "RTN,1,%llu,%u,", possible_loations_left,hshape);
-    for (w = 0; w < hshape; ++w)
-      fprintf(stderr, "%02x", orig_o->v1[w]);
-    fprintf(stderr, ",");
-    for (w = 0; w < hshape; ++w)
-      fprintf(stderr, "%02x", o->v1[w]);
-    fprintf(stderr, "\n");
-#endif
-
     //  if (unlikely(!afl->pass_stats[key].total)) {
 
     if ((!found_one && (lvl & LVL1)) || afl->queue_cur->is_ascii) {
@@ -2991,123 +2836,6 @@ static u8 rtn_fuzz(afl_state_t *afl, u32 key, u8 *orig_buf, u8 *buf, u8 *cbuf,
   if (afl->pass_stats[key].total < 0xff) { afl->pass_stats[key].total++; }
 
   return 0;
-
-}
-
-void output_cmp_differences(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
-  
-  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
-  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { // now run program with colorized buf
-    return;
-  }
-
-  for (u32 k = 0; k < CMP_MAP_W; ++k) {
-    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
-      fprintf(stderr, "INCONSISTENTLY (hits) Key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
-        afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
-    } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
-      fprintf(stderr, "INCONSISTENTLY (type) Key: %u\n", k);
-    }
-  }
-
-  memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
-  if (unlikely(common_fuzz_cmplog_stuff(afl, orig_buf, len))) { // now run program with colorized buf
-    return;
-  }
-
-  for (u32 k = 0; k < CMP_MAP_W; ++k) {
-    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
-      fprintf(stderr, "BY INPUT (hits) key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
-        afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
-    } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
-      fprintf(stderr, "BY INPUT (type); key: %u\n", k);
-    }
-  }
-
-  u32 compares = 0;
-  for (u32 k = 0; k < CMP_MAP_W; ++k) {
-    if (afl->orig_cmp_map->headers[k].hits){
-      compares++;
-    }
-  }
-  fprintf(stderr, "Compares on ORG: %u\n", compares);
-  compares = 0;
-  for (u32 k = 0; k < CMP_MAP_W; ++k) {
-    if (afl->shm.cmp_map->headers[k].hits){
-      compares++;
-    }
-  }
-  fprintf(stderr, "Compares on NEW: %u\n", compares);
-
-  fprintf(stderr, ">>> Check done\n");
-
-  u32 different_values_rtn = 0;
-  u32 different_values_cmp = 0;
-  for (u32 k = 0; k < CMP_MAP_W; ++k) {
-    bool different = false;
-    if (afl->shm.cmp_map->headers[k].hits == 0){continue;}
-    // if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){continue;};
-
-    unsigned loggeds;
-    if (afl->shm.cmp_map->headers[k].type == CMP_TYPE_INS){
-      loggeds = MIN((u32) afl->shm.cmp_map->headers[k].hits, (u32) CMP_MAP_H);
-    } else {
-      loggeds = MIN((u32) afl->shm.cmp_map->headers[k].hits, (u32) CMP_MAP_RTN_H);
-    }
-
-
-    for (unsigned i = 0; i < loggeds; ++i) {
-      struct cmp_operands *o = &afl->orig_cmp_map->log[k][i];
-
-      struct cmp_operands *o_new = &afl->shm.cmp_map->log[k][i];
-
-      if (afl->shm.cmp_map->headers[k].type == CMP_TYPE_INS){
-
-        if (o_new->v0 != o->v0 || o_new->v1 != o->v1){
-          fprintf(stderr, "1: Key %u logged %u differ: %02llx - %02llx | %02llx - %02llx \n", 
-            k, i, o_new->v0 , o->v0, o_new->v1, o->v1);
-          different = true;
-        }
-        
-
-      } else {
-
-        if (memcmp(o_new, o, sizeof(struct cmpfn_operands))) {
-
-          fprintf(stderr, "2: Key %u logged %u differ o0=", k, i);
-          unsigned w;
-          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
-            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o)->v0[w]);
-          fprintf(stderr, " v0=");
-          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
-            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o_new)->v0[w]);
-          fprintf(stderr, " o1=");
-          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
-            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o)->v1[w]);
-          fprintf(stderr, " v1=");
-          for (w = 0; w < ((struct cmpfn_operands *)o)->v0_len; ++w)
-            fprintf(stderr, "%02x", ((struct cmpfn_operands *)o_new)->v1[w]);
-          fprintf(stderr, "\n");
-          different = true;
-
-        }
-
-      }
-    }
-
-    if (different){
-      // different_values_cmp++;
-      if (afl->shm.cmp_map->headers[k].type == CMP_TYPE_INS) {
-        different_values_cmp++;
-      }  else {
-        different_values_rtn++;
-      }
-      
-    }    
-
-  }
-
-  fprintf(stderr, "Comparisons with different values: %u (cmp) %u (rtn) out of %u\n", different_values_cmp, different_values_rtn, compares);
 
 }
 
@@ -3319,18 +3047,6 @@ u32 compare_cmp_maps(afl_state_t *afl, u8 set_unchanging, struct taint_cmp * tai
 
 }
 
-void compare_types(afl_state_t *afl){
-
-  for (u32 k = 0; k < CMP_MAP_W; ++k) {
-    if (afl->shm.cmp_map->headers[k].hits != afl->orig_cmp_map->headers[k].hits){
-      fprintf(stderr, "INCONSISTENTLY (hits) Key: %u type: %u - %u hits: %u - %u\n", k, afl->shm.cmp_map->headers[k].type, afl->orig_cmp_map->headers[k].type,
-        afl->shm.cmp_map->headers[k].hits, afl->orig_cmp_map->headers[k].hits);
-    } else if (afl->shm.cmp_map->headers[k].type != afl->orig_cmp_map->headers[k].type) {
-      fprintf(stderr, "INCONSISTENTLY (type) Key: %u\n", k);
-    }
-  }
-}
-
 u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len, 
                     struct tainted *taint, struct taint_cmp * taint_cmp_list[CMP_MAP_W]){
   u32 changed = 0;
@@ -3353,7 +3069,6 @@ u8 fill_taint_map(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len,
 
   changed = compare_cmp_maps(afl, 0, taint_cmp_list, NULL, ntaint);
   fprintf(stderr, "Changed with same input %u\n", changed);
-//   compare_types(afl);
 
 #endif
 // // #ifdef TAINT_MAP_LOG
@@ -3427,20 +3142,17 @@ u8 free_taint_map(afl_state_t *afl, struct taint_cmp * taint_cmp_list[CMP_MAP_W]
         } else if (loggeds > CMP_MAP_RTN_H) {
             loggeds = CMP_MAP_RTN_H;
         }
-        // fprintf(stderr, "CMPMap: %u \n", k);
+
         for (unsigned i = 0; i < loggeds; ++i) {
-          // fprintf(stderr, "Logged: %u \n", i);
+
           if (t_cmp->taint_loggeds[i].nv0){
-            // fprintf(stderr, "Free v0 %u %p \n", t_cmp->taint_loggeds[i].nv0, t_cmp->taint_loggeds[i].v0);
             ck_free(t_cmp->taint_loggeds[i].v0);
           }
           if (t_cmp->taint_loggeds[i].nv1){
-            // fprintf(stderr, "Free v1 %u %p\n", t_cmp->taint_loggeds[i].nv1, t_cmp->taint_loggeds[i].v1);
             ck_free(t_cmp->taint_loggeds[i].v1);
           }
 
         }
-        // fprintf(stderr, "-- Free taint_loggeds\n");
         ck_free(t_cmp->taint_loggeds);   
       }
 
@@ -3483,7 +3195,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   }
 
   if (!afl->queue_cur->taint || !afl->queue_cur->cmplog_colorinput) {
-    // get all ranges which does NOT change the behaviour
+
     if (unlikely(colorization(afl, buf, len, &taint))) { return 1; }
 
     // no taint? still try, create a dummy to prevent again colorization
@@ -3553,11 +3265,9 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
     afl->orig_cmp_map = ck_alloc_nozero(sizeof(struct cmp_map));
 
   }
-  // Save cmp map of not colorized as orig_cmp_map
+
   memcpy(afl->orig_cmp_map, afl->shm.cmp_map, sizeof(struct cmp_map));
 
-  // output_cmp_differences(afl, orig_buf, buf, len);
-  
   struct taint_cmp * taint_cmp_list[CMP_MAP_W] = {0};
   if (unlikely(fill_taint_map(afl, orig_buf, buf, len, taint, taint_cmp_list))) {
     afl->queue_cur->colorized = CMPLOG_LVL_MAX;
@@ -3576,7 +3286,7 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
 
 
   memset(afl->shm.cmp_map->headers, 0, sizeof(struct cmp_header) * CMP_MAP_W);
-  if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) { // now run program with colorized buf
+  if (unlikely(common_fuzz_cmplog_stuff(afl, buf, len))) {
 
     afl->queue_cur->colorized = CMPLOG_LVL_MAX;
     while (taint) {
@@ -3594,8 +3304,8 @@ u8 input_to_state_stage(afl_state_t *afl, u8 *orig_buf, u8 *buf, u32 len) {
   }
 
 #ifdef _DEBUG
-  dump("ORIG not-colorized", orig_buf, len);
-  dump("NEW colorized ", buf, len);
+  dump("ORIG", orig_buf, len);
+  dump("NEW", buf, len);
 #endif
 
   // Start insertion loop
